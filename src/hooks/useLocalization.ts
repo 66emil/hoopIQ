@@ -1,0 +1,207 @@
+import { useState, useEffect } from 'react';
+
+export type Language = 'en';
+
+interface LocalizationData {
+  [key: string]: {
+    [key: string]: string;
+  };
+}
+
+const localizations: LocalizationData = {
+  en: {
+    // Landing page
+    'landing.hero.title1': 'Boost your',
+    'landing.hero.title2': 'Basketball IQ',
+    'landing.hero.subtitle': 'Study tactics, analyze game situations and become smarter on the court',
+    'landing.features.title': 'Everything for developing basketball intelligence',
+    'landing.features.subtitle': 'Comprehensive platform for studying tactics and developing game thinking',
+    'landing.feature.theory.title': 'Theoretical Base',
+    'landing.feature.theory.description': 'Study basketball tactics and schemes with interactive materials and animations',
+    'landing.feature.quiz.title': 'Video Quizzes',
+    'landing.feature.quiz.description': 'Analyze real game situations and make the right decisions',
+    'landing.feature.progress.title': 'Progress System',
+    'landing.feature.progress.description': 'Track your achievements and increase your basketball IQ level',
+    'landing.feature.levels.title': 'For All Levels',
+    'landing.feature.levels.description': 'From beginners to advanced players - materials for everyone',
+    'landing.feature.why.title': 'Why Basketball IQ?',
+    'landing.feature.why.description': 'Our platform will help you develop tactical thinking and improve game understanding',
+    'landing.benefits.title': 'Platform Benefits',
+    'landing.benefits.improve.title': 'Improve Game Understanding',
+    'landing.benefits.improve.description': 'Deep study of basketball principles',
+    'landing.benefits.thinking.title': 'Develop Tactical Thinking',
+    'landing.benefits.thinking.description': 'Analysis and decision making in game situations',
+    'landing.benefits.schemes.title': 'Study Professional Schemes',
+    'landing.benefits.schemes.description': 'Tactics from NBA and world basketball',
+    'landing.benefits.iq.title': 'Increase Basketball IQ',
+    'landing.benefits.iq.description': 'Systematic development of game intelligence',
+    'landing.cta.button': 'Start Learning',
+    'landing.cta.subtitle': 'We will show you how our service works',
+
+    // Header
+    'header.title': 'Basketball IQ',
+    'header.subtitle': 'Boost your skills',
+    'header.nav.tactics': 'Knowledge Base',
+    'header.nav.quiz': 'Reading Combinations',
+    'header.nav.admin': 'Admin',
+    'header.nav.profile': 'Profile',
+    'header.progress.text': 'Progress to next level',
+    'header.guest': 'Guest',
+
+    // Tactics Section
+    'tactics.title': 'Knowledge Base',
+    'tactics.subtitle': 'Study basketball tactics and schemes',
+    'tactics.description': 'Master the art of basketball through interactive learning materials',
+    'tactics.filter.difficulty': 'Difficulty',
+    'tactics.filter.category': 'Category',
+    'tactics.filter.all': 'All',
+    'tactics.filter.beginner': 'Beginner',
+    'tactics.filter.intermediate': 'Intermediate',
+    'tactics.filter.advanced': 'Advanced',
+    'tactics.filter.offense': 'Offense',
+    'tactics.filter.defense': 'Defense',
+    'tactics.filter.transition': 'Transition',
+    'tactics.progress.title': 'Your Progress',
+    'tactics.progress.completed': 'Completed',
+    'tactics.progress.total': 'Total',
+    'tactics.progress.level': 'Level',
+    'tactics.progress.score': 'Score',
+    'tactics.info.title': 'How to Study',
+    'tactics.info.description': 'Click "Show Details" to expand each tactic card and learn step-by-step instructions. Each completed tactic gives you 50 points and helps increase your level.',
+    'tactics.noResults': 'No tactics found with the selected filters. Try adjusting your search criteria.',
+
+    // Quiz Section
+    'quiz.title': 'Reading Combinations',
+    'quiz.subtitle': 'Analyze game situations',
+    'quiz.description': 'Test your understanding through interactive video quizzes',
+    'quiz.filter.category': 'Category',
+    'quiz.filter.playlist': 'Playlist',
+    'quiz.progress.title': 'Quiz Progress',
+    'quiz.progress.completed': 'Completed',
+    'quiz.progress.total': 'Total',
+
+    // Profile
+    'profile.title': 'Profile',
+    'profile.subtitle': 'Your progress and achievements',
+    'profile.stats.title': 'Statistics',
+    'profile.stats.level': 'Current Level',
+    'profile.stats.score': 'Total Score',
+    'profile.stats.tactics': 'Tactics Studied',
+    'profile.stats.quizzes': 'Quizzes Completed',
+    'profile.settings.title': 'Settings',
+    'profile.settings.name': 'Name',
+    'profile.settings.save': 'Save Changes',
+
+    // Tutorial
+    'tutorial.step1.title': 'Welcome to Basketball IQ!',
+    'tutorial.step1.description': 'Let\'s get acquainted with the capabilities of our platform',
+    'tutorial.step1.content.title': 'Basketball IQ',
+    'tutorial.step1.content.subtitle': 'Your platform for developing basketball intelligence',
+    'tutorial.step1.content.description': 'Here you can study tactics, analyze game situations and develop tactical thinking',
+    
+    'tutorial.step2.title': 'Knowledge Base',
+    'tutorial.step2.description': 'Study tactics and schemes',
+    'tutorial.step2.content.title': 'What you will find:',
+    'tutorial.step2.content.item1': 'Basketball tactics and schemes',
+    'tutorial.step2.content.item2': 'Interactive animations',
+    'tutorial.step2.content.item3': 'Step-by-step instructions',
+    'tutorial.step2.content.item4': 'Different difficulty levels',
+    'tutorial.step2.content.tip': 'Each studied tactic brings 50 points and increases your level',
+    
+    'tutorial.step3.title': 'Reading Combinations',
+    'tutorial.step3.description': 'Analyze game situations',
+    'tutorial.step3.content.title': 'Video Quizzes:',
+    'tutorial.step3.content.item1': 'Watch real game moments',
+    'tutorial.step3.content.item2': 'Analysis and decision making',
+    'tutorial.step3.content.item3': 'Test game understanding',
+    'tutorial.step3.content.item4': 'Get points for correct answers',
+    'tutorial.step3.content.tip': 'Correct answer - 100 points, attempt - 25 points',
+    
+    'tutorial.step4.title': 'Progress System',
+    'tutorial.step4.description': 'Track your achievements',
+    'tutorial.step4.content.title': 'Your Progress:',
+    'tutorial.step4.content.level': 'Level',
+    'tutorial.step4.content.score': 'Score',
+    'tutorial.step4.content.tip': 'Every 200 points increase your level',
+    
+    'tutorial.step5.title': 'Service Navigation',
+    'tutorial.step5.description': 'How to find the information you need',
+    'tutorial.step5.content.title': 'Main Sections:',
+    'tutorial.step5.content.tactics': 'Knowledge Base - studying tactics',
+    'tutorial.step5.content.quiz': 'Reading Combinations - video quizzes',
+    'tutorial.step5.content.profile': 'Profile - your progress',
+    'tutorial.step5.content.tip': 'Use filters to find the materials you need by difficulty and category',
+    
+    'tutorial.step6.title': 'Ready to start?',
+    'tutorial.step6.description': 'Start learning!',
+    'tutorial.step6.content.title': 'Welcome!',
+    'tutorial.step6.content.subtitle': 'Now you know how our service works. Start by studying tactics or try your hand at video quizzes!',
+    'tutorial.step6.content.tip': 'Tip: Start with beginner-level tactics to understand the basics',
+
+    // Common
+    'tutorial.back': 'Back',
+    'tutorial.next': 'Next',
+    'tutorial.skip': 'Skip',
+    'tutorial.close': 'Close',
+    'tutorial.start': 'Start Learning',
+    'tutorial.step': 'Step',
+    'tutorial.of': 'of',
+
+    // Auth
+    'auth.login.title': 'Login',
+    'auth.register.title': 'Registration',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.name': 'Name',
+    'auth.login.button': 'Login',
+    'auth.register.button': 'Register',
+    'auth.switch.login': 'Already have an account? Login',
+    'auth.switch.register': 'Don\'t have an account? Register',
+    'auth.error.invalid': 'Invalid login or password',
+
+    // Tactic Card
+    'tactic.showDetails': 'Show Details',
+    'tactic.hideDetails': 'Hide Details',
+    'tactic.difficulty': 'Difficulty',
+    'tactic.category': 'Category',
+    'tactic.completed': 'Completed',
+
+    // Quiz Card
+    'quiz.start': 'Start Quiz',
+    'quiz.submit': 'Submit Answer',
+    'quiz.reset': 'Try Again',
+    'quiz.correct': 'Correct!',
+    'quiz.incorrect': 'Incorrect!',
+    'quiz.score': 'Score',
+    'quiz.result': 'Result',
+
+    // Language switcher
+    'language.en': 'English',
+    'language.ru': '',
+    'language.switch': ''
+  }
+};
+
+export const useLocalization = () => {
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
+
+  useEffect(() => {
+    const savedLanguage = 'en';
+    setCurrentLanguage(savedLanguage);
+  }, []);
+
+  const changeLanguage = (language: Language) => {
+    setCurrentLanguage(language);
+    localStorage.setItem('language', language);
+  };
+
+  const t = (key: string): string => {
+    return localizations[currentLanguage]?.[key] || key;
+  };
+
+  return {
+    currentLanguage,
+    changeLanguage,
+    t
+  };
+};

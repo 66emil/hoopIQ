@@ -1,0 +1,71 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+# Node / JS
+node_modules/
+
+# Build outputs
+/dist/
+/server/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Vite cache
+/.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Local data
+cookies.txt
+appdb.json
+/server/appdb.json
+/server/app.db*
+/server/*.db
+/server/*.db-*
+
+# Editor
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Misc
+*.local
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
