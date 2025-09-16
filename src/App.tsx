@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landing } from './components/Landing';
 import { Header } from './components/Header';
 import { TacticsSection } from './components/TacticsSection';
@@ -8,10 +8,13 @@ import { AdminPanel } from './components/AdminPanel';
 import { useProgress } from './hooks/useProgress';
 import { useAdminData } from './hooks/useAdminData';
 import { useLocalization } from './hooks/useLocalization';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function App() {
   const { t } = useLocalization();
-  const [activeSection, setActiveSection] = useState<'landing' | 'tactics' | 'quiz' | 'admin' | 'profile'>('landing');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeSection, setActiveSection] = useState<'landing' | 'tactics' | 'quiz' | 'admin' | 'profile'>('tactics');
   const { progress, completeQuiz } = useProgress();
   const {
     tactics,
@@ -30,14 +33,23 @@ function App() {
 
   const handleStartLearning = () => {
     setActiveSection('tactics');
+    navigate('/app/tactics');
   };
+
+  useEffect(() => {
+    // синхронизируем состояние с URL
+    const path = location.pathname.replace(/^\/app\/?/, '') || 'tactics';
+    if (['tactics','quiz','admin','profile'].includes(path)) {
+      setActiveSection(path as any);
+    }
+  }, [location.pathname]);
 
   const renderSection = () => {
     switch (activeSection) {
       case 'landing':
         return <Landing onStartLearning={handleStartLearning} />;
       case 'tactics':
-        return <TacticsSection tactics={tactics} />;
+        return <TacticsSection tactics={tactics} tacticPlaylists={playlists.filter(p => (p.kind || 'quiz') === 'tactic').map(p => ({ id: p.id, title: p.title, description: p.description, category: p.category, scenario: 'custom', thumbnail: p.thumbnail, tacticIds: p.tacticIds || [] }))} />;
       case 'quiz':
         return (
           <QuizSection
@@ -73,10 +85,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {activeSection !== 'landing' && (
+      {true && (
         <Header
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          onSectionChange={(s) => { setActiveSection(s); navigate(`/app/${s}`); }}
           progress={progress}
         />
       )}

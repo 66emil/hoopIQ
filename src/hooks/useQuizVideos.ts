@@ -16,7 +16,7 @@ export const useQuizVideos = () => {
       const videoList = useSupabase ? await listVideosFromSupabase() : await videosList();
       setVideos(videoList);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки видео');
+      setError(err instanceof Error ? err.message : 'Failed to load videos');
       console.error('Failed to load videos:', err);
     } finally {
       setIsLoading(false);

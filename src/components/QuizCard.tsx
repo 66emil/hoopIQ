@@ -16,7 +16,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthLoading } = useAuth();
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -46,7 +46,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
     setShowResult(true);
     
     if (!isCompleted) {
-      const score = selectedAnswer === quiz.correctAnswer ? 100 : 25;
+      const score = selectedAnswer === quiz.correctAnswer ? 25 : 0;
       onComplete(score);
     }
   };
@@ -57,6 +57,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
   };
 
   const handleStartQuiz = () => {
+    if (isAuthLoading) return; // не дергать модалку, пока статус загружается
     if (!currentUser) {
       setShowAuthModal(true);
     } else {
@@ -91,13 +92,14 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                 <VideoPlayer 
                   src={quiz.videoUrl} 
                   className="h-full"
+                  hideOverlayControls
                 />
               ) : (
                 <div className="h-full">
-                  <h3 className="text-lg font-semibold text-white mb-4">Объяснение</h3>
                   <VideoPlayer 
                     src={quiz.explanationVideoUrl || quiz.videoUrl} 
                     className="h-full"
+                    hideOverlayControls
                   />
                 </div>
               )}
@@ -108,14 +110,14 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
           <div className="w-96 bg-gray-800 p-6 overflow-y-auto">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Вопрос:</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">Question:</h3>
                 <p className="text-gray-300">{quiz.question}</p>
               </div>
 
               {!showResult ? (
                 <>
                   <div className="space-y-3">
-                    <h4 className="font-medium text-white">Варианты ответа:</h4>
+                    <h4 className="font-medium text-white">Options:</h4>
                     {quiz.options.map((option, index) => (
                       <button
                         key={index}
@@ -137,7 +139,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                     disabled={selectedAnswer === null}
                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
                   >
-                    Отправить ответ
+                    Submit answer
                   </button>
                 </>
               ) : (
@@ -156,10 +158,10 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                       <span className={`font-semibold ${
                         selectedAnswer === quiz.correctAnswer ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {selectedAnswer === quiz.correctAnswer ? 'Правильно!' : 'Неправильно'}
+                        {selectedAnswer === quiz.correctAnswer ? 'Correct!' : 'Incorrect'}
                       </span>
                     </div>
-                    <p className="text-gray-300 text-sm">{quiz.explanation}</p>
+                    {/* Explanation text removed to avoid layout shift */}
                   </div>
 
                   <div className="flex space-x-2">
@@ -167,13 +169,13 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                       onClick={resetQuiz}
                       className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                     >
-                      Попробовать снова
+                      Try again
                     </button>
                     <button
                       onClick={() => setShowQuiz(false)}
                       className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                     >
-                      Закрыть
+                      {selectedAnswer === quiz.correctAnswer ? '+25 points' : 'Close'}
                     </button>
                   </div>
                 </div>

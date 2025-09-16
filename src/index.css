@@ -47,3 +47,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #ea580c;
 }
+
+/* Анимация плавного появления из центра */
+@keyframes fade-in-scale {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 220ms ease-out;
+}

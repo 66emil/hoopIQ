@@ -2,6 +2,7 @@
 import { Trophy, User, BookOpen, Video, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useLocalization } from '../hooks/useLocalization';
+import { getLevelInfo, getProgressWithinLevel } from '../services/levels';
 import { UserProgress } from '../types';
 
 interface HeaderProps {
@@ -11,7 +12,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthLoading } = useAuth();
   const { t } = useLocalization();
 
   return (
@@ -68,26 +69,43 @@ export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps
             <div className="flex items-center space-x-3">
               <button onClick={() => onSectionChange('profile')} className="flex items-center space-x-3 bg-gray-800 px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition-colors">
                 <User className="h-5 w-5 text-orange-400" />
-                <div className="text-sm">
-                  <div className="font-semibold text-white">{currentUser ? currentUser.name : t('header.guest')}</div>
-                  <div className="text-orange-400">{t('tactics.progress.level')} {progress.level} · {progress.totalScore} {t('tactics.progress.score')}</div>
-                </div>
+                {(() => {
+                  const info = getLevelInfo(progress.totalScore);
+                  return (
+                    <div className="text-sm text-left">
+                      <div className="font-semibold text-white">
+                        {isAuthLoading ? '…' : (currentUser ? currentUser.name : t('header.guest'))}
+                      </div>
+                      <div className="text-orange-300 inline-flex items-center space-x-1">
+                        <span>{info.badge}</span>
+                        <span>{info.name}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </button>
             </div>
           </div>
         </div>
         
         <div className="pb-2">
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${((progress.totalScore % 200) / 200) * 100}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>{t('header.progress.text')}</span>
-            <span>{progress.totalScore % 200}/200</span>
-          </div>
+          {(() => {
+            const prog = getProgressWithinLevel(progress.totalScore);
+            return (
+              <>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${prog.total ? prog.percent : 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>{t('header.progress.text')}</span>
+                  <span>{prog.total ? `${prog.current}/${prog.total}` : 'MAX'}</span>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
     </header>

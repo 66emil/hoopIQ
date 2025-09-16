@@ -20,6 +20,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
 }) => {
   const { videos, isLoading: videosLoading, error: videosError } = useQuizVideos();
   const [activeCategory, setActiveCategory] = useState<'all' | 'offense' | 'defense'>('all');
+  const [activeDifficulty, setActiveDifficulty] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
   const [activePlaylistId, setActivePlaylistId] = useState<string>('all');
   // const [showVideosFromDB, setShowVideosFromDB] = useState(false);
 
@@ -49,12 +50,15 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     if (activeCategory !== 'all') {
       list = list.filter(q => q.category === activeCategory);
     }
+    if (activeDifficulty !== 'all') {
+      list = list.filter(q => q.difficulty === activeDifficulty);
+    }
     if (activePlaylistId !== 'all') {
-      const pl = playlists.find(p => p.id === activePlaylistId);
+      const pl = playlists.find(p => (p.kind || 'quiz') === 'quiz' && p.id === activePlaylistId);
       if (pl) list = list.filter(q => pl.quizIds.includes(q.id));
     }
     return list;
-  }, [allQuizzes, activeCategory, activePlaylistId, playlists]);
+  }, [allQuizzes, activeCategory, activeDifficulty, activePlaylistId, playlists]);
 
   const completedCount = completedQuizzes.filter(id => filteredQuizzes.some(q => q.id === id)).length;
   const totalCount = filteredQuizzes.length;
@@ -68,7 +72,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
         </div>
         <p className="text-gray-300 mb-4">
           Analyze game situations and make the right decisions.
-          Correct answer gives 100 points, attempt gives 25 points.
+          Correct answer gives +25 XP.
         </p>
 
         {/* Переключатель между локальными квизами и видео из БД */}
@@ -111,6 +115,19 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
               <option value="defense">Defense</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Difficulty</label>
+            <select 
+              value={activeDifficulty} 
+              onChange={(e) => setActiveDifficulty(e.target.value as any)} 
+              className="px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white focus:border-orange-500 focus:ring-orange-500"
+            >
+              <option value="all">All</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Playlist</label>
@@ -120,7 +137,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
               className="px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white focus:border-orange-500 focus:ring-orange-500"
             >
               <option value="all">All playlists</option>
-              {playlists.map(playlist => (
+              {playlists.filter(p => (p.kind || 'quiz') === 'quiz').map(playlist => (
                 <option key={playlist.id} value={playlist.id}>
                   {playlist.title} ({playlist.quizIds.length})
                 </option>

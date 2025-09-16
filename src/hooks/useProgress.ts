@@ -2,17 +2,23 @@ import { useState, useEffect } from 'react';
 import { UserProgress } from '../types';
 import { useAuth } from './useAuth';
 import { apiUpdateProgress } from '../services/api';
+import { isSupabaseEnabled } from '../services/supabaseClient';
+import { getLevelFromXP } from '../services/levels';
 
 const getStorageKey = (userId: string) => `basketball-iq-progress-${userId}`;
 
 export const useProgress = () => {
   const { currentUser, accessToken } = useAuth();
   const [progress, setProgress] = useState<UserProgress>(() => {
+    const initialPoints = 0;
     return {
       completedTactics: [],
       completedQuizzes: [],
-      totalScore: 0,
-      level: 0
+      totalScore: initialPoints,
+      level: getLevelFromXP(initialPoints),
+      streakCount: 0,
+      lastActionDate: null,
+      lastStreakAwardDate: null
     };
   });
 
@@ -20,11 +26,15 @@ export const useProgress = () => {
   useEffect(() => {
     if (!currentUser) {
       // Сброс прогресса при выходе из аккаунта
+      const initialPoints = 0;
       setProgress({
         completedTactics: [],
         completedQuizzes: [],
-        totalScore: 0,
-        level: 0
+        totalScore: initialPoints,
+        level: getLevelFromXP(initialPoints),
+        streakCount: 0,
+        lastActionDate: null,
+        lastStreakAwardDate: null
       });
       return;
     }
@@ -35,7 +45,16 @@ export const useProgress = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as UserProgress;
-        setProgress(parsed);
+        // Backward compatibility defaults
+        setProgress({
+          completedTactics: parsed.completedTactics ?? [],
+          completedQuizzes: parsed.completedQuizzes ?? [],
+          totalScore: parsed.totalScore ?? 0,
+          level: parsed.level ? parsed.level : getLevelFromXP(parsed.totalScore ?? 0),
+          streakCount: parsed.streakCount ?? 0,
+          lastActionDate: parsed.lastActionDate ?? null,
+          lastStreakAwardDate: parsed.lastStreakAwardDate ?? null
+        });
       } catch {
         // Если ошибка парсинга, сбрасываем к начальным значениям
         setProgress({
@@ -47,11 +66,15 @@ export const useProgress = () => {
       }
     } else {
       // Новый пользователь - начинаем с 0
+      const initialPoints = 0;
       setProgress({
         completedTactics: [],
         completedQuizzes: [],
-        totalScore: 0,
-        level: 0
+        totalScore: initialPoints,
+        level: getLevelFromXP(initialPoints),
+        streakCount: 0,
+        lastActionDate: null,
+        lastStreakAwardDate: null
       });
     }
   }, [currentUser]);
@@ -66,7 +89,9 @@ export const useProgress = () => {
   // Синхронизация с сервером при изменении уровня или очков
   useEffect(() => {
     if (!accessToken) return;
-    
+    const useSupabase = isSupabaseEnabled();
+    if (useSupabase) return; // при Supabase не шлем прогресс на локальный сервер
+
     const syncWithServer = async () => {
       try {
         await apiUpdateProgress(accessToken, progress.level, progress.totalScore);
@@ -75,40 +100,93 @@ export const useProgress = () => {
       }
     };
 
-    // Синхронизируем только если уровень > 0 или очки > 0
     if (progress.level > 0 || progress.totalScore > 0) {
       syncWithServer();
     }
   }, [progress.level, progress.totalScore, accessToken]);
 
+  const getTodayStr = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const isYesterday = (dateStr: string | null): boolean => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date(getTodayStr() + 'T00:00:00');
+    const diffMs = today.getTime() - d.getTime();
+    return diffMs > 0 && diffMs <= 24 * 60 * 60 * 1000;
+  };
+
+  const applyAction = (prev: UserProgress, basePoints: number): UserProgress => {
+    const today = getTodayStr();
+    let streak = prev.streakCount ?? 0;
+    // Update streak counter based on last action date
+    if (prev.lastActionDate === today) {
+      // same day, keep streak as is
+    } else if (isYesterday(prev.lastActionDate ?? null)) {
+      streak = (streak || 0) + 1;
+    } else {
+      streak = 1; // start new streak
+    }
+
+    // Award streak bonus once per day
+    let bonus = 0;
+    const alreadyAwardedToday = prev.lastStreakAwardDate === today;
+    if (!alreadyAwardedToday) {
+      const capped = Math.min(streak, 10); // cap at 10 days => 200 XP
+      bonus = 20 * capped;
+    }
+
+    const newTotal = prev.totalScore + basePoints + bonus;
+    return {
+      ...prev,
+      totalScore: newTotal,
+      level: getLevelFromXP(newTotal),
+      streakCount: streak,
+      lastActionDate: today,
+      lastStreakAwardDate: alreadyAwardedToday ? prev.lastStreakAwardDate || today : today
+    };
+  };
+
   const completeTactic = (tacticId: string) => {
     if (!progress.completedTactics.includes(tacticId)) {
-      setProgress(prev => ({
-        ...prev,
-        completedTactics: [...prev.completedTactics, tacticId],
-        totalScore: prev.totalScore + 50,
-        level: Math.floor((prev.totalScore + 50) / 200)
-      }));
+      setProgress(prev => {
+        const updated = applyAction(prev, 10);
+        return {
+          ...updated,
+          completedTactics: [...prev.completedTactics, tacticId]
+        };
+      });
     }
   };
 
   const completeQuiz = (quizId: string, score: number) => {
     if (!progress.completedQuizzes.includes(quizId)) {
-      setProgress(prev => ({
-        ...prev,
-        completedQuizzes: [...prev.completedQuizzes, quizId],
-        totalScore: prev.totalScore + score,
-        level: Math.floor((prev.totalScore + score) / 200)
-      }));
+      setProgress(prev => {
+        const base = Math.max(0, score | 0);
+        const updated = applyAction(prev, base);
+        return {
+          ...updated,
+          completedQuizzes: [...prev.completedQuizzes, quizId]
+        };
+      });
     }
   };
 
   const resetProgress = () => {
+    const initialPoints = 0;
     setProgress({
       completedTactics: [],
       completedQuizzes: [],
-      totalScore: 0,
-      level: 0
+      totalScore: initialPoints,
+      level: getLevelFromXP(initialPoints),
+      streakCount: 0,
+      lastActionDate: null,
+      lastStreakAwardDate: null
     });
   };
 

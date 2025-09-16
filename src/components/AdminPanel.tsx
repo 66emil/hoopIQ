@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
-import { Tactic, QuizQuestion, Playlist, PlaylistScenario } from '../types';
+import { Tactic, QuizQuestion, Playlist, PlaylistScenario, TacticPlaylist } from '../types';
 
 interface AdminPanelProps {
   tactics?: Tactic[];
   quizzes?: QuizQuestion[];
   playlists?: Playlist[];
+  tacticPlaylists?: TacticPlaylist[];
   onAddTactic?: (tactic: Omit<Tactic, 'id'>) => void;
   onUpdateTactic?: (id: string, tactic: Tactic) => void;
   onDeleteTactic?: (id: string) => void;
@@ -15,6 +16,9 @@ interface AdminPanelProps {
   onAddPlaylist?: (playlist: Omit<Playlist, 'id'>) => void;
   onUpdatePlaylist?: (id: string, playlist: Playlist) => void;
   onDeletePlaylist?: (id: string) => void;
+  onAddTacticPlaylist?: (playlist: Omit<TacticPlaylist, 'id'>) => void;
+  onUpdateTacticPlaylist?: (id: string, playlist: TacticPlaylist) => void;
+  onDeleteTacticPlaylist?: (id: string) => void;
 }
 
 interface TacticForm {
@@ -24,6 +28,7 @@ interface TacticForm {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   steps: string[];
   thumbnail?: string;
+  stepImages?: string[];
 }
 
 interface QuizForm {
@@ -52,6 +57,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   tactics = [],
   quizzes = [],
   playlists = [],
+  tacticPlaylists = [],
   onAddTactic,
   onUpdateTactic,
   onDeleteTactic,
@@ -60,7 +66,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeleteQuiz,
   onAddPlaylist,
   onUpdatePlaylist,
-  onDeletePlaylist
+  onDeletePlaylist,
+  onAddTacticPlaylist,
+  onUpdateTacticPlaylist,
+  onDeleteTacticPlaylist
 }) => {
   const [activeTab, setActiveTab] = useState<'tactics' | 'quizzes' | 'playlists'>('tactics');
   
@@ -71,7 +80,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     category: 'offense',
     difficulty: 'beginner',
     steps: [''],
-    thumbnail: ''
+    thumbnail: '',
+    stepImages: ['']
   });
   const [editingTactic, setEditingTactic] = useState<Tactic | null>(null);
 
@@ -100,6 +110,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     quizIds: []
   });
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
+
+  // Tactic Playlists
+  type TacticPlaylistForm = {
+    title: string;
+    description: string;
+    category: 'offense' | 'defense';
+    thumbnail?: string;
+    tacticIds: string[];
+  };
+  const [tacticPlaylistForm, setTacticPlaylistForm] = useState<TacticPlaylistForm>({
+    title: '',
+    description: '',
+    category: 'offense',
+    thumbnail: '',
+    tacticIds: []
+  });
+  const [editingTacticPlaylist, setEditingTacticPlaylist] = useState<TacticPlaylist | null>(null);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -196,7 +223,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300 mb-1">Steps</label>
               {tacticForm.steps.map((step, index) => (
-                <div key={index} className="flex space-x-2 mb-2">
+                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
                   <input
                     type="text"
                     value={step}
@@ -205,21 +232,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       newSteps[index] = e.target.value;
                       setTacticForm({ ...tacticForm, steps: newSteps });
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                    placeholder={`Step ${index + 1} text`}
+                    className="px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
                   />
-                  <button
-                    onClick={() => {
-                      const newSteps = tacticForm.steps.filter((_, i) => i !== index);
-                      setTacticForm({ ...tacticForm, steps: newSteps });
+                  <input
+                    type="text"
+                    value={tacticForm.stepImages?.[index] || ''}
+                    onChange={(e) => {
+                      const imgs = [...(tacticForm.stepImages || [])];
+                      imgs[index] = e.target.value;
+                      setTacticForm({ ...tacticForm, stepImages: imgs });
                     }}
-                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                    placeholder="Step image URL"
+                    className="px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                  />
+                  <div className="md:col-span-2 flex justify-end">
+                    <button
+                      onClick={() => {
+                        const newSteps = tacticForm.steps.filter((_, i) => i !== index);
+                        const imgs = (tacticForm.stepImages || []).filter((_, i) => i !== index);
+                        setTacticForm({ ...tacticForm, steps: newSteps, stepImages: imgs });
+                      }}
+                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
               <button
-                onClick={() => setTacticForm({ ...tacticForm, steps: [...tacticForm.steps, ''] })}
+                onClick={() => setTacticForm({ ...tacticForm, steps: [...tacticForm.steps, ''], stepImages: [...(tacticForm.stepImages || []), ''] })}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
               >
                 <Plus className="h-4 w-4" />
@@ -245,7 +287,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         category: 'offense',
                         difficulty: 'beginner',
                         steps: [''],
-                        thumbnail: ''
+                        thumbnail: '',
+                        stepImages: ['']
                       });
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
@@ -262,7 +305,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         category: 'offense',
                         difficulty: 'beginner',
                         steps: [''],
-                        thumbnail: ''
+                        thumbnail: '',
+                        stepImages: ['']
                       });
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
@@ -285,7 +329,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       category: 'offense',
                       difficulty: 'beginner',
                       steps: [''],
-                      thumbnail: ''
+                      thumbnail: '',
+                      stepImages: ['']
                     });
                   }}
                   className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
@@ -336,7 +381,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           category: tactic.category,
                           difficulty: tactic.difficulty,
                           steps: tactic.steps,
-                          thumbnail: tactic.thumbnail
+                          thumbnail: tactic.thumbnail,
+                          stepImages: tactic.stepImages && tactic.stepImages.length ? tactic.stepImages : tactic.steps.map(() => '')
                         });
                       }}
                       className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
@@ -474,7 +520,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 type="text"
                 value={quizForm.explanationVideoUrl}
                 onChange={(e) => setQuizForm({ ...quizForm, explanationVideoUrl: e.target.value })}
-                placeholder="URL видео с объяснением"
+                placeholder="Explanation video URL"
                 className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
               />
             </div>
@@ -645,6 +691,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
               
               <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Kind</label>
+                <select
+                  value={(playlistForm as any).kind || 'quiz'}
+                  onChange={(e) => setPlaylistForm({ ...(playlistForm as any), kind: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                >
+                  <option value="quiz">Quiz playlist</option>
+                  <option value="tactic">Tactic playlist</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
                 <select
                   value={playlistForm.category}
@@ -656,20 +714,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Scenario</label>
-                <select
-                  value={playlistForm.scenario}
-                  onChange={(e) => setPlaylistForm({ ...playlistForm, scenario: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
-                >
-                  <option value="endgame">Endgame</option>
-                  <option value="transition">Transition</option>
-                  <option value="vs_zone">Vs zone</option>
-                  <option value="stars_breakdown">Stars breakdown</option>
-                  <option value="custom">Custom</option>
-                </select>
-              </div>
+              
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Thumbnail</label>
@@ -693,34 +738,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               />
             </div>
             
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Quizzes in playlist</label>
-              <div className="space-y-2">
-                {quizzes.map((quiz) => (
-                  <label key={quiz.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={playlistForm.quizIds.includes(quiz.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setPlaylistForm({
-                            ...playlistForm,
-                            quizIds: [...playlistForm.quizIds, quiz.id]
-                          });
-                        } else {
-                          setPlaylistForm({
-                            ...playlistForm,
-                            quizIds: playlistForm.quizIds.filter(id => id !== quiz.id)
-                          });
-                        }
-                      }}
-                      className="text-orange-500 focus:ring-orange-500"
-                    />
-                    <span className="text-gray-300">{quiz.title}</span>
-                  </label>
-                ))}
+            {((playlistForm as any).kind || 'quiz') === 'quiz' ? (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-1">Quizzes in playlist</label>
+                <div className="space-y-2">
+                  {quizzes.map((quiz) => (
+                    <label key={quiz.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={playlistForm.quizIds.includes(quiz.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPlaylistForm({
+                              ...playlistForm,
+                              quizIds: [...playlistForm.quizIds, quiz.id]
+                            });
+                          } else {
+                            setPlaylistForm({
+                              ...playlistForm,
+                              quizIds: playlistForm.quizIds.filter(id => id !== quiz.id)
+                            });
+                          }
+                        }}
+                        className="text-orange-500 focus:ring-orange-500"
+                      />
+                      <span className="text-gray-300">{quiz.title}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-1">Tactics in playlist</label>
+                <div className="space-y-2">
+                  {tactics.map((t) => (
+                    <label key={t.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={((playlistForm as any).tacticIds || []).includes(t.id)}
+                        onChange={(e) => {
+                          const current = ((playlistForm as any).tacticIds || []) as string[];
+                          const next = e.target.checked ? [...current, t.id] : current.filter(id => id !== t.id);
+                          setPlaylistForm({ ...(playlistForm as any), tacticIds: next });
+                        }}
+                        className="text-orange-500 focus:ring-orange-500"
+                      />
+                      <span className="text-gray-300">{t.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="flex space-x-2">
               {editingPlaylist ? (
@@ -728,17 +796,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <button
                     onClick={() => {
                       if (onUpdatePlaylist) {
-                        onUpdatePlaylist(editingPlaylist.id, {
+                        const kind = (playlistForm as any).kind || 'quiz';
+                        const payload: Playlist = {
                           ...editingPlaylist,
-                          ...playlistForm
-                        });
+                          ...playlistForm,
+                          kind,
+                          quizIds: kind === 'quiz' ? playlistForm.quizIds : [],
+                          tacticIds: kind === 'tactic' ? ((playlistForm as any).tacticIds || []) : []
+                        } as any;
+                        onUpdatePlaylist(editingPlaylist.id, payload);
                       }
                       setEditingPlaylist(null);
                       setPlaylistForm({
                         title: '',
                         description: '',
                         category: 'offense',
-                        scenario: 'custom',
                         thumbnail: '',
                         quizIds: []
                       });
@@ -755,7 +827,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         title: '',
                         description: '',
                         category: 'offense',
-                        scenario: 'custom',
                         thumbnail: '',
                         quizIds: []
                       });
@@ -770,15 +841,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <button
                   onClick={() => {
                     if (onAddPlaylist) {
-                      onAddPlaylist({
-                        ...playlistForm
-                      });
+                      const kind = (playlistForm as any).kind || 'quiz';
+                      const payload: Omit<Playlist, 'id'> = {
+                        ...playlistForm,
+                        kind,
+                        quizIds: kind === 'quiz' ? playlistForm.quizIds : [],
+                        tacticIds: kind === 'tactic' ? ((playlistForm as any).tacticIds || []) : []
+                      } as any;
+                      onAddPlaylist(payload);
                     }
                     setPlaylistForm({
                       title: '',
                       description: '',
                       category: 'offense',
-                      scenario: 'custom',
                       thumbnail: '',
                       quizIds: []
                     });
@@ -822,7 +897,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           title: playlist.title,
                           description: playlist.description || '',
                           category: playlist.category,
-                          scenario: playlist.scenario,
                           thumbnail: playlist.thumbnail || '',
                           quizIds: playlist.quizIds
                         });

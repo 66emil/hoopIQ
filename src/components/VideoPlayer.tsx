@@ -7,6 +7,7 @@ interface VideoPlayerProps {
   onEnded?: () => void;
   stopAt?: number; // время в секундах, когда нужно остановить видео
   className?: string;
+  hideOverlayControls?: boolean;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -14,7 +15,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onTimeUpdate,
   onEnded,
   stopAt,
-  className = ''
+  className = '',
+  hideOverlayControls = false
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -100,7 +102,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('ended', handleEnded);
-    const handleError = () => setError('Не удалось загрузить видео');
+    const handleError = () => setError('Failed to load video');
     video.addEventListener('error', handleError);
 
     return () => {
@@ -176,6 +178,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       )}
       
+      {!hideOverlayControls && (
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
         <div className="flex items-center space-x-3">
           <button
@@ -214,6 +217,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </button>
         </div>
       </div>
+      )}
       {error && (
         <div className="absolute top-2 left-2 right-2 text-sm text-red-400 bg-red-900/40 border border-red-700 rounded p-2">
           {error}

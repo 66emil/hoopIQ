@@ -8,6 +8,7 @@ export interface Tactic {
   thumbnail?: string;
   // completed?: boolean;
   animation?: TacticAnimation;
+  stepImages?: string[]; // optional images for steps, indexed by step
 }
 
 export interface QuizQuestion {
@@ -19,7 +20,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
   explanation: string;
-  explanationVideoUrl?: string; // URL видео с объяснением
+  explanationVideoUrl?: string; // explanation video URL
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   category: 'offense' | 'defense';
   // completed?: boolean;
@@ -29,12 +30,15 @@ export interface UserProgress {
   completedTactics: string[];
   completedQuizzes: string[];
   totalScore: number;
-  level: number;
+  level: number; // numeric level index (1..9)
+  streakCount?: number;
+  lastActionDate?: string | null; // YYYY-MM-DD of last learning action
+  lastStreakAwardDate?: string | null; // YYYY-MM-DD when streak bonus was last granted
 }
 
 export interface VideoQuiz extends QuizQuestion {
   videoFile?: File;
-  videoTimestamp?: number; // время в секундах, когда нужно остановить видео для вопроса
+  videoTimestamp?: number; // time in seconds to stop video for question
 }
 
 export interface AdminData {
@@ -44,11 +48,13 @@ export interface AdminData {
 }
 
 export type PlaylistScenario =
-  | 'endgame'            // Конец игры
-  | 'transition'         // Переход из защиты в атаку
-  | 'vs_zone'            // Против зоны
-  | 'stars_breakdown'    // Лучшие решения звезд
+  | 'endgame'
+  | 'transition'
+  | 'vs_zone'
+  | 'stars_breakdown'
   | 'custom';
+
+export type PlaylistKind = 'quiz' | 'tactic';
 
 export interface Playlist {
   id: string;
@@ -57,17 +63,30 @@ export interface Playlist {
   category: 'offense' | 'defense';
   scenario: PlaylistScenario;
   thumbnail?: string;
-  quizIds: string[]; // идентификаторы квизов, входящих в плейлист
+  quizIds: string[]; // quiz ids included into playlist
+  kind?: PlaylistKind; // optional for backward compatibility
+  tacticIds?: string[]; // tactic ids included into playlist (when kind==='tactic')
+}
+
+export interface TacticPlaylist {
+  id: string;
+  title: string;
+  description?: string;
+  category: 'offense' | 'defense';
+  scenario: PlaylistScenario;
+  thumbnail?: string;
+  tacticIds: string[]; // tactic ids included into playlist
+  kind?: PlaylistKind; // should be 'tactic'
 }
 
 export interface TacticAnimation {
-  courtWidth: number; // условные единицы
+  courtWidth: number; // arbitrary units
   courtHeight: number;
   players: Array<{
     id: string;
     team: 'offense' | 'defense';
     color?: string;
-    path: Array<{ x: number; y: number; t: number }>; // t в секундах
+    path: Array<{ x: number; y: number; t: number }>; // t in seconds
   }>;
   arrows?: Array<{
     from: { x: number; y: number };

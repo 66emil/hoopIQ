@@ -8,26 +8,26 @@ const ADMIN_STORAGE_KEY = 'basketball-iq-admin-data';
 
 export const useAdminData = () => {
   const [adminData, setAdminData] = useState<AdminData>(() => {
-    // const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
-    // if (saved) {
-    //   try {
-    //     const parsed = JSON.parse(saved) as AdminData;
-    //     const isCompletelyEmpty =
-    //       (!parsed.tactics || parsed.tactics.length === 0) &&
-    //       (!parsed.quizzes || parsed.quizzes.length === 0) &&
-    //       (!parsed.playlists || parsed.playlists.length === 0);
-    //     if (isCompletelyEmpty) {
-    //       return { tactics: [], quizzes: [], playlists: [] };
-    //     }
-    //     return {
-    //       tactics: parsed.tactics ?? [],
-    //       quizzes: parsed.quizzes ?? [],
-    //       playlists: parsed.playlists ?? []
-    //     };
-    //   } catch {
-    //     return { tactics: [], quizzes: [], playlists: [] };
-    //   }
-    // }
+    const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as AdminData;
+        const isCompletelyEmpty =
+          (!parsed.tactics || parsed.tactics.length === 0) &&
+          (!parsed.quizzes || parsed.quizzes.length === 0) &&
+          (!parsed.playlists || parsed.playlists.length === 0);
+        if (isCompletelyEmpty) {
+          return { tactics: [], quizzes: [], playlists: [] } as AdminData;
+        }
+        return {
+          tactics: parsed.tactics ?? [],
+          quizzes: parsed.quizzes ?? [],
+          playlists: parsed.playlists ?? []
+        };
+      } catch {
+        return { tactics: [], quizzes: [], playlists: [] } as AdminData;
+      }
+    }
     return {
       tactics: [],
       quizzes: [],
@@ -121,6 +121,7 @@ export const useAdminData = () => {
       playlists: prev.playlists.filter(p => p.id !== id)
     }));
   };
+
 
   return {
     tactics: adminData.tactics,

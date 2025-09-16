@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TacticCard } from './TacticCard';
-import { Tactic } from '../types';
+import { Tactic, TacticPlaylist } from '../types';
 import { useProgress } from '../hooks/useProgress';
 import { BookOpen, Info } from 'lucide-react';
 import { useLocalization } from '../hooks/useLocalization';
@@ -8,14 +8,16 @@ import { TutorialModal } from './TutorialModal';
 
 interface TacticsSectionProps {
   tactics: Tactic[];
+  tacticPlaylists?: TacticPlaylist[];
 }
 
-export const TacticsSection = ({ tactics }: TacticsSectionProps) => {
+export const TacticsSection = ({ tactics, tacticPlaylists = [] }: TacticsSectionProps) => {
   const { t } = useLocalization();
-  const { progress, markTacticCompleted } = useProgress();
+  const { progress, completeTactic } = useProgress();
   const [filteredTactics, setFilteredTactics] = useState<Tactic[]>(tactics);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [showTutorial, setShowTutorial] = useState(false);
 
   // Show tutorial for new users (first time visiting tactics section)
@@ -47,8 +49,13 @@ export const TacticsSection = ({ tactics }: TacticsSectionProps) => {
       filtered = filtered.filter(tactic => tactic.category === selectedCategory);
     }
 
+    if (selectedPlaylistId !== 'all') {
+      const pl = tacticPlaylists.find(p => p.id === selectedPlaylistId);
+      if (pl) filtered = filtered.filter(t => pl.tacticIds.includes(t.id));
+    }
+
     setFilteredTactics(filtered);
-  }, [tactics, selectedDifficulty, selectedCategory]);
+  }, [tactics, selectedDifficulty, selectedCategory, selectedPlaylistId, tacticPlaylists]);
 
   const getDifficultyOptions = () => {
     const difficulties = Array.from(new Set(tactics.map(tactic => tactic.difficulty)));
@@ -68,6 +75,10 @@ export const TacticsSection = ({ tactics }: TacticsSectionProps) => {
              category === 'defense' ? t('tactics.filter.defense') : 
              category === 'transition' ? t('tactics.filter.transition') : category
     }));
+  };
+
+  const getPlaylistOptions = () => {
+    return tacticPlaylists.map(p => ({ value: p.id, label: p.title }));
   };
 
   const completedTactics = tactics.filter(tactic => 
@@ -151,6 +162,23 @@ export const TacticsSection = ({ tactics }: TacticsSectionProps) => {
                   ))}
                 </select>
               </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Playlists
+                </label>
+                <select
+                  value={selectedPlaylistId}
+                  onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="all">All playlists</option>
+                  {getPlaylistOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -176,7 +204,7 @@ export const TacticsSection = ({ tactics }: TacticsSectionProps) => {
                 key={tactic.id}
                 tactic={tactic}
                 isCompleted={progress.completedTactics.includes(tactic.id)}
-                onComplete={() => markTacticCompleted(tactic.id)}
+                onComplete={() => completeTactic(tactic.id)}
               />
             ))}
           </div>
