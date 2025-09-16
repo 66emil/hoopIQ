@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { authRoutes } from './auth.js';
 import { videoRoutes } from './videos.js';
 import playlistsRouter from './playlists.js';
@@ -9,6 +11,10 @@ import { initDB } from './db.js';
 
 const app = express();
 const PORT = process.env.PORT || 5174;
+
+// __dirname для ESM/TSX
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 const corsOptions: cors.CorsOptions = {
@@ -49,6 +55,10 @@ app.use('/auth', authRoutes);
 app.use('/videos', videoRoutes);
 app.use('/playlists', playlistsRouter);
 
+// Продакшн: раздача статики Vite из dist
+const distPath = path.resolve(__dirname, '../dist');
+app.use(express.static(distPath));
+
 // Главная страница API
 app.get('/', (req, res) => {
   res.json({
@@ -66,6 +76,15 @@ app.get('/', (req, res) => {
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// SPA fallback: все прочие маршруты отдаем index.html
+app.get('*', (req, res, next) => {
+  // Не перехватываем API маршруты
+  if (req.path.startsWith('/auth') || req.path.startsWith('/videos') || req.path.startsWith('/playlists') || req.path.startsWith('/health')) {
+    return next();
+  }
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
