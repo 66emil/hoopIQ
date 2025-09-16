@@ -131,6 +131,78 @@ export const initDB = async () => {
       CREATE INDEX IF NOT EXISTS idx_playlist_items_playlist ON playlist_items(playlistId);
       CREATE INDEX IF NOT EXISTS idx_playlist_items_video ON playlist_items(videoId);
     `);
+
+    // Миграция: добавить колонку kind в playlists при отсутствии
+    const playlistsPragma = db.prepare(`PRAGMA table_info(playlists)`).all();
+    const hasKind = playlistsPragma.some((c: any) => c.name === 'kind');
+    if (!hasKind) {
+      db.exec('BEGIN TRANSACTION');
+      try {
+        db.exec(`ALTER TABLE playlists ADD COLUMN kind TEXT DEFAULT 'quiz' CHECK (kind IN ('quiz','tactic'))`);
+        db.exec(`UPDATE playlists SET kind = 'quiz' WHERE kind IS NULL`);
+        db.exec('COMMIT');
+      } catch (e) {
+        db.exec('ROLLBACK');
+        throw e;
+      }
+    }
+
+    // Таблица связей для тактических плейлистов
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS tactic_playlist_items (
+        playlistId TEXT NOT NULL,
+        tacticId TEXT NOT NULL,
+        position INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (playlistId, tacticId),
+        FOREIGN KEY (playlistId) REFERENCES playlists(id) ON DELETE CASCADE,
+        FOREIGN KEY (tacticId) REFERENCES tactics(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_tactic_playlist_items_playlist ON tactic_playlist_items(playlistId);
+      CREATE INDEX IF NOT EXISTS idx_tactic_playlist_items_tactic ON tactic_playlist_items(tacticId);
+    `);
+
+    // Тактики
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS tactics (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT NOT NULL CHECK (category IN ('offense','defense')),
+        difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner','intermediate','advanced')),
+        steps TEXT NOT NULL, -- JSON string array
+        thumbnail TEXT,
+        stepImages TEXT, -- JSON string array
+        animation TEXT, -- JSON object
+        createdAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_tactics_createdAt ON tactics(createdAt);
+      CREATE INDEX IF NOT EXISTS idx_tactics_category ON tactics(category);
+      CREATE INDEX IF NOT EXISTS idx_tactics_difficulty ON tactics(difficulty);
+    `);
+
+    // Вопросы квизов (с привязкой к видео через videoUrl)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS quiz_questions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        question TEXT NOT NULL,
+        options TEXT NOT NULL, -- JSON string array
+        correctAnswer INTEGER NOT NULL,
+        explanation TEXT NOT NULL,
+        explanationVideoUrl TEXT,
+        difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner','intermediate','advanced')),
+        category TEXT NOT NULL CHECK (category IN ('offense','defense')),
+        videoUrl TEXT NOT NULL,
+        thumbnail TEXT,
+        createdAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_quiz_questions_createdAt ON quiz_questions(createdAt);
+      CREATE INDEX IF NOT EXISTS idx_quiz_questions_category ON quiz_questions(category);
+      CREATE INDEX IF NOT EXISTS idx_quiz_questions_difficulty ON quiz_questions(difficulty);
+    `);
     console.log('SQLite DB initialized at', DB_FILE);
   } catch (error) {
     console.error('DB init error:', error);

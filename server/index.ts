@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 import { authRoutes } from './auth.js';
 import { videoRoutes } from './videos.js';
 import playlistsRouter from './playlists.js';
+import tacticsRouter from './tactics.js';
+import quizzesRouter from './quizzes.js';
 import { initDB } from './db.js';
 
 const app = express();
@@ -54,6 +56,8 @@ initDB().then(() => {
 app.use('/auth', authRoutes);
 app.use('/videos', videoRoutes);
 app.use('/playlists', playlistsRouter);
+app.use('/tactics', tacticsRouter);
+app.use('/quizzes', quizzesRouter);
 
 // Продакшн: раздача статики Vite из dist
 const distPath = path.resolve(__dirname, '../dist');
@@ -67,6 +71,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/auth',
       videos: '/videos',
+      tactics: '/tactics',
+      quizzes: '/quizzes',
       health: '/health'
     },
     timestamp: new Date().toISOString()
@@ -81,7 +87,7 @@ app.get('/health', (req, res) => {
 // SPA fallback: все прочие маршруты отдаем index.html
 app.get('*', (req, res, next) => {
   // Не перехватываем API маршруты
-  if (req.path.startsWith('/auth') || req.path.startsWith('/videos') || req.path.startsWith('/playlists') || req.path.startsWith('/health')) {
+  if (req.path.startsWith('/auth') || req.path.startsWith('/videos') || req.path.startsWith('/playlists') || req.path.startsWith('/tactics') || req.path.startsWith('/quizzes') || req.path.startsWith('/health')) {
     return next();
   }
   res.sendFile(path.join(distPath, 'index.html'));

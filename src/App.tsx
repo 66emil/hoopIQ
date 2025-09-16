@@ -31,6 +31,15 @@ function App() {
     deletePlaylist
   } = useAdminData();
 
+  // Обертки для соответствия сигнатурам AdminPanel (void, не Promise, и полный объект)
+  const handleAddTactic = (t: Omit<any, 'id'>) => { void addTactic(t); };
+  const handleUpdateTactic = (id: string, t: any) => { void updateTactic(id, t); };
+  const handleDeleteTactic = (id: string) => { void deleteTactic(id); };
+
+  const handleAddQuiz = (q: Omit<any, 'id'>) => { void addQuiz(q); };
+  const handleUpdateQuiz = (id: string, q: any) => { void updateQuiz(id, q); };
+  const handleDeleteQuiz = (id: string) => { void deleteQuiz(id); };
+
   const handleStartLearning = () => {
     setActiveSection('tactics');
     navigate('/app/tactics');
@@ -65,12 +74,12 @@ function App() {
             tactics={tactics}
             quizzes={quizzes}
             playlists={playlists}
-            onAddTactic={addTactic}
-            onUpdateTactic={updateTactic}
-            onDeleteTactic={deleteTactic}
-            onAddQuiz={addQuiz}
-            onUpdateQuiz={updateQuiz}
-            onDeleteQuiz={deleteQuiz}
+            onAddTactic={handleAddTactic}
+            onUpdateTactic={handleUpdateTactic}
+            onDeleteTactic={handleDeleteTactic}
+            onAddQuiz={handleAddQuiz}
+            onUpdateQuiz={handleUpdateQuiz}
+            onDeleteQuiz={handleDeleteQuiz}
             onAddPlaylist={addPlaylist}
             onUpdatePlaylist={updatePlaylist}
             onDeletePlaylist={deletePlaylist}
