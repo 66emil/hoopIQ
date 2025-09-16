@@ -32,13 +32,13 @@ function App() {
   } = useAdminData();
 
   // Обертки для соответствия сигнатурам AdminPanel (void, не Promise, и полный объект)
-  const handleAddTactic = (t: Omit<any, 'id'>) => { void addTactic(t); };
-  const handleUpdateTactic = (id: string, t: any) => { void updateTactic(id, t); };
-  const handleDeleteTactic = (id: string) => { void deleteTactic(id); };
+  const handleAddTactic = (t: Omit<any, 'id'>) => { addTactic(t).catch(e => alert(e?.message || 'Не удалось сохранить тактику')); };
+  const handleUpdateTactic = (id: string, t: any) => { updateTactic(id, t).catch(e => alert(e?.message || 'Не удалось обновить тактику')); };
+  const handleDeleteTactic = (id: string) => { deleteTactic(id).catch(e => alert(e?.message || 'Не удалось удалить тактику')); };
 
-  const handleAddQuiz = (q: Omit<any, 'id'>) => { void addQuiz(q); };
-  const handleUpdateQuiz = (id: string, q: any) => { void updateQuiz(id, q); };
-  const handleDeleteQuiz = (id: string) => { void deleteQuiz(id); };
+  const handleAddQuiz = (q: Omit<any, 'id'>) => { addQuiz(q).catch(e => alert(e?.message || 'Не удалось сохранить квиз')); };
+  const handleUpdateQuiz = (id: string, q: any) => { updateQuiz(id, q).catch(e => alert(e?.message || 'Не удалось обновить квиз')); };
+  const handleDeleteQuiz = (id: string) => { deleteQuiz(id).catch(e => alert(e?.message || 'Не удалось удалить квиз')); };
 
   const handleStartLearning = () => {
     setActiveSection('tactics');

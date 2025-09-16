@@ -7,7 +7,7 @@ export async function listQuizzesFromSupabase(): Promise<QuizQuestion[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('id, title, question, options, correctAnswer, explanation, explanationVideoUrl, difficulty, category, videoUrl, thumbnail, created_at')
+    .select('id, title, question, options, correctanswer, explanation, explanationvideourl, difficulty, category, videourl, thumbnail, created_at')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message || 'Failed to load quizzes');
   return (data || []).map((r: any) => ({
@@ -15,12 +15,12 @@ export async function listQuizzesFromSupabase(): Promise<QuizQuestion[]> {
     title: r.title,
     question: r.question,
     options: (r.options as string[]) || [],
-    correctAnswer: r.correctAnswer,
+    correctAnswer: r.correctanswer,
     explanation: r.explanation,
-    explanationVideoUrl: r.explanationVideoUrl || undefined,
+    explanationVideoUrl: r.explanationvideourl || undefined,
     difficulty: r.difficulty,
     category: r.category,
-    videoUrl: r.videoUrl,
+    videoUrl: r.videourl,
     thumbnail: r.thumbnail || undefined
   }));
 }
@@ -31,27 +31,27 @@ export async function createQuizInSupabase(payload: Omit<QuizQuestion, 'id'>): P
     title: payload.title,
     question: payload.question,
     options: payload.options,
-    correctAnswer: payload.correctAnswer,
+    correctanswer: payload.correctAnswer,
     explanation: payload.explanation,
-    explanationVideoUrl: payload.explanationVideoUrl || null,
+    explanationvideourl: payload.explanationVideoUrl || null,
     difficulty: payload.difficulty,
     category: payload.category,
-    videoUrl: payload.videoUrl,
+    videourl: payload.videoUrl,
     thumbnail: payload.thumbnail || null
   };
-  const { data, error } = await supabase.from(TABLE).insert(insert).select('id, title, question, options, correctAnswer, explanation, explanationVideoUrl, difficulty, category, videoUrl, thumbnail').single();
+  const { data, error } = await supabase.from(TABLE).insert(insert).select('id, title, question, options, correctanswer, explanation, explanationvideourl, difficulty, category, videourl, thumbnail').single();
   if (error) throw new Error(error.message || 'Failed to create quiz');
   return {
     id: String(data.id),
     title: data.title,
     question: data.question,
     options: data.options || [],
-    correctAnswer: data.correctAnswer,
+    correctAnswer: data.correctanswer,
     explanation: data.explanation,
-    explanationVideoUrl: data.explanationVideoUrl || undefined,
+    explanationVideoUrl: data.explanationvideourl || undefined,
     difficulty: data.difficulty,
     category: data.category,
-    videoUrl: data.videoUrl,
+    videoUrl: data.videourl,
     thumbnail: data.thumbnail || undefined
   };
 }
@@ -60,11 +60,14 @@ export async function updateQuizInSupabase(id: string, updates: Partial<QuizQues
   const supabase = getSupabaseClient();
   const payload: any = { ...updates };
   delete payload.id;
+  if ('correctAnswer' in payload) { payload.correctanswer = payload.correctAnswer; delete payload.correctAnswer; }
+  if ('explanationVideoUrl' in payload) { payload.explanationvideourl = payload.explanationVideoUrl; delete payload.explanationVideoUrl; }
+  if ('videoUrl' in payload) { payload.videourl = payload.videoUrl; delete payload.videoUrl; }
   const { data, error } = await supabase
     .from(TABLE)
     .update(payload)
     .eq('id', id)
-    .select('id, title, question, options, correctAnswer, explanation, explanationVideoUrl, difficulty, category, videoUrl, thumbnail')
+    .select('id, title, question, options, correctanswer, explanation, explanationvideourl, difficulty, category, videourl, thumbnail')
     .single();
   if (error) throw new Error(error.message || 'Failed to update quiz');
   return {
@@ -72,12 +75,12 @@ export async function updateQuizInSupabase(id: string, updates: Partial<QuizQues
     title: data.title,
     question: data.question,
     options: data.options || [],
-    correctAnswer: data.correctAnswer,
+    correctAnswer: data.correctanswer,
     explanation: data.explanation,
-    explanationVideoUrl: data.explanationVideoUrl || undefined,
+    explanationVideoUrl: data.explanationvideourl || undefined,
     difficulty: data.difficulty,
     category: data.category,
-    videoUrl: data.videoUrl,
+    videoUrl: data.videourl,
     thumbnail: data.thumbnail || undefined
   };
 }
