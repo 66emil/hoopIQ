@@ -175,11 +175,11 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                <div className="relative bg-black aspect-square md:aspect-auto md:h-[560px]">
+                <div className="relative bg-gray-900 aspect-square md:aspect-auto md:h-[560px]">
                   {tactic.stepImages && tactic.stepImages[activeStep] && tactic.stepImages[activeStep].trim() !== '' ? (
-                    <img src={tactic.stepImages[activeStep]} alt={`step-${activeStep+1}`} className="w-full h-full object-cover" />
+                    <img src={tactic.stepImages[activeStep]} alt={`step-${activeStep+1}`} className="w-full h-full object-contain" />
                   ) : tactic.thumbnail ? (
-                    <img src={tactic.thumbnail} alt="thumbnail" className="w-full h-full object-cover" />
+                    <img src={tactic.thumbnail} alt="thumbnail" className="w-full h-full object-contain" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-500">No image</div>
                   )}
