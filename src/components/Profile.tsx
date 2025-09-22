@@ -27,6 +27,40 @@ export const Profile = ({ progress }: ProfileProps) => {
 
   useEffect(() => { setName(currentUser?.name ?? ''); }, [currentUser?.name]);
 
+  // Кэш профиля per-user в localStorage
+  const getProfileCacheKey = (userId: string) => `profile-cache-${userId}`;
+  type CachedProfile = {
+    nickname?: string | null;
+    avatarUrl?: string | null;
+    bio?: string | null;
+    position?: string | null;
+    avatarCropX?: number | null;
+    avatarCropY?: number | null;
+    avatarScale?: number | null;
+    level?: number | null;
+    xp?: number | null;
+    updatedAt?: string | null;
+  };
+
+  const applyProfileToState = (p: CachedProfile) => {
+    if (p.nickname != null) setName(p.nickname || '');
+    if (p.avatarUrl != null) setAvatar(p.avatarUrl || null);
+    if (p.bio != null) setBio(p.bio || '');
+    if (p.position != null) setPosition(p.position || '');
+    if (p.avatarCropX != null && p.avatarCropY != null) setAvatarCrop({ x: p.avatarCropX || 0, y: p.avatarCropY || 0 });
+    if (p.avatarScale != null) setAvatarZoom(p.avatarScale || 1);
+  };
+
+  const writeCache = (userId: string, p: CachedProfile) => {
+    try {
+      localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(p));
+      // Для обратной совместимости оставим прежние ключи
+      if (p.avatarUrl != null) localStorage.setItem('profile-avatar', p.avatarUrl || '');
+      if (p.bio != null) localStorage.setItem('profile-bio', p.bio || '');
+      if (p.position != null) localStorage.setItem('profile-position', p.position || '');
+    } catch {}
+  };
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,25 +78,57 @@ export const Profile = ({ progress }: ProfileProps) => {
   const saveBio = (v: string) => { setBio(v); localStorage.setItem('profile-bio', v); setDirty(true); };
   const savePosition = (v: string) => { setPosition(v); localStorage.setItem('profile-position', v); setDirty(true); };
 
-  // Load profile from Supabase if enabled
+  // Загрузка профиля: сначала локальный кэш, затем фоновой запрос к Supabase
   useEffect(() => {
     const load = async () => {
       if (!currentUser) return;
       if (!isSupabaseEnabled()) return;
+
+      // 1) Показать данные из кэша мгновенно
+      try {
+        const cachedRaw = localStorage.getItem(getProfileCacheKey(currentUser.id));
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw) as CachedProfile;
+          applyProfileToState(cached);
+        }
+      } catch {}
+
+      // 2) Фоново запросить актуальные данные из Supabase
       try {
         const p = await getProfile(currentUser.id);
-        if (p) {
-          if (p.nickname) { setName(p.nickname); }
-          if (p.avatarUrl) { setAvatar(p.avatarUrl); }
-          if (p.bio) { setBio(p.bio); }
-          if (p.position) { setPosition(p.position); }
-          if (p.avatarCropX != null && p.avatarCropY != null) { setAvatarCrop({ x: p.avatarCropX, y: p.avatarCropY }); }
-          if (p.avatarScale != null) { setAvatarZoom(p.avatarScale); }
+        if (!p) return;
+
+        const normalized: CachedProfile = {
+          nickname: p.nickname ?? null,
+          avatarUrl: p.avatarUrl ?? null,
+          bio: p.bio ?? null,
+          position: p.position ?? null,
+          avatarCropX: p.avatarCropX ?? null,
+          avatarCropY: p.avatarCropY ?? null,
+          avatarScale: p.avatarScale ?? null,
+          level: (p as any).level ?? null,
+          xp: (p as any).xp ?? null,
+          updatedAt: p.updatedAt ?? null
+        };
+
+        const cacheKey = getProfileCacheKey(currentUser.id);
+        const prevRaw = localStorage.getItem(cacheKey);
+        const isChanged = (() => {
+          try {
+            if (!prevRaw) return true;
+            const prev = JSON.parse(prevRaw);
+            return JSON.stringify(prev) !== JSON.stringify(normalized);
+          } catch { return true; }
+        })();
+
+        if (!dirty) {
+          if (isChanged) applyProfileToState(normalized);
+          writeCache(currentUser.id, normalized);
         }
       } catch {}
     };
     load();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, dirty]);
 
   const saveProfileToSupabase = async () => {
     if (!currentUser) return;
@@ -79,6 +145,19 @@ export const Profile = ({ progress }: ProfileProps) => {
         avatarScale: avatarZoom,
         level: progress.level,
         xp: progress.totalScore
+      });
+      // Синхронно обновим локальный кэш
+      writeCache(currentUser.id, {
+        nickname: name,
+        avatarUrl: avatar,
+        bio,
+        position,
+        avatarCropX: avatarCrop.x,
+        avatarCropY: avatarCrop.y,
+        avatarScale: avatarZoom,
+        level: progress.level,
+        xp: progress.totalScore,
+        updatedAt: new Date().toISOString()
       });
       setDirty(false);
     } catch (e) {
