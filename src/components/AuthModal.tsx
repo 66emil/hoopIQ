@@ -15,6 +15,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   
   const { login, register } = useAuth();
 
@@ -24,6 +25,10 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     setIsLoading(true);
 
     try {
+      if (!isLogin && !acceptedPrivacy) {
+        setError('Please accept the Privacy Policy');
+        return;
+      }
       let result;
       
       if (isLogin) {
@@ -156,6 +161,24 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             />
           </div>
 
+          {!isLogin && (
+            <label className="flex items-start gap-3 text-sm text-gray-300">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                required
+              />
+              <span>
+                I have read and agree with the{' '}
+                <a href="/privacy" target="_blank" className="text-orange-400 hover:text-orange-300 underline">
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+          )}
+
           {error && (
             <div className="bg-red-900/30 border border-red-600 rounded-lg p-3">
               <p className="text-red-400 text-sm">{error}</p>
@@ -164,7 +187,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (!isLogin && !acceptedPrivacy)}
             className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg hover:shadow-orange-500/25 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}

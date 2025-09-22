@@ -13,11 +13,16 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      if (mode === 'register' && !acceptedPrivacy) {
+        setError('Please accept the Privacy Policy');
+        return;
+      }
       if (mode === 'login') {
         const err = await onLogin(email, password);
         setError(err);
@@ -84,6 +89,23 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
           required 
         />
       </div>
+      {mode === 'register' && (
+        <label className="flex items-start gap-3 text-sm text-gray-300">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+            checked={acceptedPrivacy}
+            onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+            required
+          />
+          <span>
+            I have read and agree with the{' '}
+            <a href="/privacy" target="_blank" className="text-orange-400 hover:text-orange-300 underline">
+              Privacy Policy
+            </a>
+          </span>
+        </label>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
         <input 
@@ -97,7 +119,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
       {error && <div className="text-sm text-red-400">{error}</div>}
       <button 
         type="submit" 
-        disabled={submitting}
+        disabled={submitting || (mode === 'register' && !acceptedPrivacy)}
         className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white px-4 py-2 rounded transition-colors shadow-lg hover:shadow-orange-500/25 disabled:cursor-not-allowed"
       >
         {submitting ? 'Loading...' : mode === 'login' ? 'Login' : 'Register'}
