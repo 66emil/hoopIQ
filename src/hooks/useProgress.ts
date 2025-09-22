@@ -3,7 +3,7 @@ import { UserProgress } from '../types';
 import { useAuth } from './useAuth';
 import { apiUpdateProgress } from '../services/api';
 import { isSupabaseEnabled } from '../services/supabaseClient';
-import { upsertProfileProgress } from '../services/supabaseProfile';
+import { upsertProfileProgress, getProfile } from '../services/supabaseProfile';
 import { getLevelFromXP } from '../services/levels';
 
 const getStorageKey = (userId: string) => `basketball-iq-progress-${userId}`;
@@ -77,6 +77,28 @@ export const useProgress = () => {
         lastActionDate: null,
         lastStreakAwardDate: null
       });
+    }
+
+    // Если включен Supabase, подтягиваем level/xp из таблицы profiles
+    if (isSupabaseEnabled()) {
+      (async () => {
+        try {
+          const p = await getProfile(currentUser.id);
+          if (p && (p.level != null || p.xp != null)) {
+            setProgress(prev => {
+              const total = typeof p.xp === 'number' ? p.xp : prev.totalScore;
+              const lvl = typeof p.level === 'number' ? p.level : getLevelFromXP(total);
+              return {
+                ...prev,
+                totalScore: total,
+                level: lvl
+              };
+            });
+          }
+        } catch (e) {
+          // молча, чтобы не мешать UX
+        }
+      })();
     }
   }, [currentUser]);
 
