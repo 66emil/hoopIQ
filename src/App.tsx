@@ -9,6 +9,7 @@ import { useProgress } from './hooks/useProgress';
 import { useAdminData } from './hooks/useAdminData';
 import { useLocalization } from './hooks/useLocalization';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useIsAdmin } from './hooks/useIsAdmin';
 
 function App() {
   const { t } = useLocalization();
@@ -16,6 +17,7 @@ function App() {
   const location = useLocation();
   const [activeSection, setActiveSection] = useState<'landing' | 'tactics' | 'quiz' | 'admin' | 'profile'>('tactics');
   const { progress, completeQuiz } = useProgress();
+  const { isAdmin, isAdminLoading } = useIsAdmin();
   const {
     tactics,
     quizzes,
@@ -69,6 +71,27 @@ function App() {
           />
         );
       case 'admin':
+        if (isAdminLoading) {
+          return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-300">Loading…</div>
+          );
+        }
+        if (!isAdmin) {
+          return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 text-center">
+                <div className="text-2xl font-semibold text-white mb-2">403 Forbidden</div>
+                <div className="text-gray-300 mb-6">У вас нет доступа к этому разделу.</div>
+                <button
+                  onClick={() => { setActiveSection('tactics'); navigate('/app/tactics'); }}
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md"
+                >
+                  На главную
+                </button>
+              </div>
+            </div>
+          );
+        }
         return (
           <AdminPanel
             tactics={tactics}

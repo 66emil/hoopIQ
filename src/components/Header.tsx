@@ -1,6 +1,7 @@
 // no React import needed for JSX with react-jsx runtime
 import { Trophy, User, BookOpen, Video, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useLocalization } from '../hooks/useLocalization';
 import { getLevelInfo, getProgressWithinLevel } from '../services/levels';
 import { UserProgress } from '../types';
@@ -13,6 +14,7 @@ interface HeaderProps {
 
 export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps) => {
   const { currentUser, isAuthLoading } = useAuth();
+  const { isAdmin, isAdminLoading } = useIsAdmin();
   const { t } = useLocalization();
 
   return (
@@ -53,17 +55,20 @@ export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps
                 <Video className="h-5 w-5" />
                 <span className="hidden sm:block">{t('header.nav.quiz')}</span>
               </button>
-              <button
-                onClick={() => onSectionChange('admin')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                  activeSection === 'admin'
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                }`}
-              >
-                <Settings className="h-5 w-5" />
-                <span className="hidden sm:block">{t('header.nav.admin')}</span>
-              </button>
+              {(isAdmin || isAdminLoading) && (
+                <button
+                  onClick={() => onSectionChange('admin')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeSection === 'admin'
+                      ? 'bg-orange-500 text-white shadow-md'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  } ${isAdminLoading && !isAdmin ? 'opacity-50 cursor-wait' : ''}`}
+                  disabled={isAdminLoading && !isAdmin}
+                >
+                  <Settings className="h-5 w-5" />
+                  <span className="hidden sm:block">{t('header.nav.admin')}</span>
+                </button>
+              )}
             </div>
             
             <div className="flex items-center space-x-3">
