@@ -30,6 +30,37 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
     }
   };
 
+  const errorMessage = String(error || '');
+  const lcError = errorMessage.toLowerCase();
+  const isVerifyEmailError = !!error && (
+    (lcError.includes('verify') && lcError.includes('email')) ||
+    (lcError.includes('confirm') && lcError.includes('email')) ||
+    lcError.includes('подтверд') ||
+    errorMessage === 'Please verify your email to complete registration'
+  );
+
+  if (isVerifyEmailError) {
+    return (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg border border-orange-500/40 animate-fade-in-scale">
+          <div className="p-6 text-center space-y-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-orange-500/15 flex items-center justify-center">
+              <span className="text-orange-400 font-bold">@</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white">Verify your email</h3>
+            <p className="text-gray-300">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="mt-2 inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-lg hover:shadow-orange-500/25"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'register' && (
