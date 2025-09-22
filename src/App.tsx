@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Landing } from './components/Landing';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { TacticsSection } from './components/TacticsSection';
 import { QuizSection } from './components/QuizSection';
 import { Profile } from './components/Profile';
@@ -116,7 +117,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
       {true && (
         <Header
           activeSection={activeSection}
@@ -124,9 +125,10 @@ function App() {
           progress={progress}
         />
       )}
-      <main>
+      <main className="flex-1">
         {renderSection()}
       </main>
+      <Footer />
     </div>
   );
 }
