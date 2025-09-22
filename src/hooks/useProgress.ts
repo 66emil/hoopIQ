@@ -3,6 +3,7 @@ import { UserProgress } from '../types';
 import { useAuth } from './useAuth';
 import { apiUpdateProgress } from '../services/api';
 import { isSupabaseEnabled } from '../services/supabaseClient';
+import { upsertProfileProgress } from '../services/supabaseProfile';
 import { getLevelFromXP } from '../services/levels';
 
 const getStorageKey = (userId: string) => `basketball-iq-progress-${userId}`;
@@ -88,9 +89,25 @@ export const useProgress = () => {
 
   // Синхронизация с сервером при изменении уровня или очков
   useEffect(() => {
-    if (!accessToken) return;
     const useSupabase = isSupabaseEnabled();
-    if (useSupabase) return; // при Supabase не шлем прогресс на локальный сервер
+    // Если используется Supabase — обновляем таблицу profiles
+    if (useSupabase) {
+      if (!currentUser) return;
+      const syncToSupabase = async () => {
+        try {
+          await upsertProfileProgress({ id: currentUser.id, level: progress.level, xp: progress.totalScore });
+        } catch (error) {
+          console.error('Ошибка синхронизации прогресса с Supabase:', error);
+        }
+      };
+      if (progress.level >= 0 && progress.totalScore >= 0) {
+        syncToSupabase();
+      }
+      return;
+    }
+
+    // Иначе шлем на локальный сервер (старый режим)
+    if (!accessToken) return;
 
     const syncWithServer = async () => {
       try {
@@ -103,7 +120,7 @@ export const useProgress = () => {
     if (progress.level > 0 || progress.totalScore > 0) {
       syncWithServer();
     }
-  }, [progress.level, progress.totalScore, accessToken]);
+  }, [progress.level, progress.totalScore, accessToken, currentUser]);
 
   const getTodayStr = () => {
     const d = new Date();

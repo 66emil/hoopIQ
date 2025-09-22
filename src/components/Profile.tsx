@@ -76,7 +76,9 @@ export const Profile = ({ progress }: ProfileProps) => {
         position,
         avatarCropX: avatarCrop.x,
         avatarCropY: avatarCrop.y,
-        avatarScale: avatarZoom
+        avatarScale: avatarZoom,
+        level: progress.level,
+        xp: progress.totalScore
       });
       setDirty(false);
     } catch (e) {
