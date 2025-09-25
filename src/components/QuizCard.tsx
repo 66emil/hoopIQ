@@ -161,8 +161,14 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                         {selectedAnswer === quiz.correctAnswer ? 'Correct!' : 'Incorrect'}
                       </span>
                     </div>
-                    {/* Explanation text removed to avoid layout shift */}
                   </div>
+
+                  {quiz.explanation && (
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+                      <p className="text-gray-200 text-sm font-medium mb-1">Explanation</p>
+                      <p className="text-gray-300 whitespace-pre-line">{quiz.explanation}</p>
+                    </div>
+                  )}
 
                   <div className="flex space-x-2">
                     <button

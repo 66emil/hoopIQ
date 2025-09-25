@@ -500,8 +500,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     }}
                     className="flex-1 px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
                   />
+                  <button
+                    onClick={() => {
+                      if (quizForm.options.length <= 2) return; // минимум 2 варианта
+                      const newOptions = quizForm.options.filter((_, i) => i !== index);
+                      let newCorrect = quizForm.correctAnswer;
+                      if (index === quizForm.correctAnswer) {
+                        newCorrect = 0;
+                      } else if (index < quizForm.correctAnswer) {
+                        newCorrect = quizForm.correctAnswer - 1;
+                      }
+                      setQuizForm({ ...quizForm, options: newOptions, correctAnswer: newCorrect });
+                    }}
+                    className="px-2 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
+              <button
+                onClick={() => setQuizForm({ ...quizForm, options: [...quizForm.options, ''] })}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add option</span>
+              </button>
             </div>
             
             <div className="mb-4">

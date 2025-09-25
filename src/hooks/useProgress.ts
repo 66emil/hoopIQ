@@ -22,6 +22,8 @@ export const useProgress = () => {
       lastStreakAwardDate: null
     };
   });
+  // Флаг, что исходное состояние прогресса загружено (из localStorage/Supabase)
+  const [isProgressLoaded, setIsProgressLoaded] = useState<boolean>(false);
 
   // Синхронизация прогресса с текущим пользователем
   useEffect(() => {
@@ -37,6 +39,7 @@ export const useProgress = () => {
         lastActionDate: null,
         lastStreakAwardDate: null
       });
+      setIsProgressLoaded(true);
       return;
     }
 
@@ -98,7 +101,12 @@ export const useProgress = () => {
         } catch (e) {
           // молча, чтобы не мешать UX
         }
+        finally {
+          setIsProgressLoaded(true);
+        }
       })();
+    } else {
+      setIsProgressLoaded(true);
     }
   }, [currentUser]);
 
@@ -115,6 +123,10 @@ export const useProgress = () => {
     // Если используется Supabase — обновляем таблицу profiles
     if (useSupabase) {
       if (!currentUser) return;
+      // Не отправляем пока исходные данные не загружены (предотвращает перезапись на 0)
+      if (!isProgressLoaded) return;
+      // Не отправляем нулевые значения, если это первое состояние
+      if (progress.totalScore === 0 && progress.level === 0) return;
       const syncToSupabase = async () => {
         try {
           await upsertProfileProgress({ id: currentUser.id, level: progress.level, xp: progress.totalScore });
@@ -130,6 +142,7 @@ export const useProgress = () => {
 
     // Иначе шлем на локальный сервер (старый режим)
     if (!accessToken) return;
+    if (!isProgressLoaded) return;
 
     const syncWithServer = async () => {
       try {
@@ -142,7 +155,7 @@ export const useProgress = () => {
     if (progress.level > 0 || progress.totalScore > 0) {
       syncWithServer();
     }
-  }, [progress.level, progress.totalScore, accessToken, currentUser]);
+  }, [progress.level, progress.totalScore, accessToken, currentUser, isProgressLoaded]);
 
   const getTodayStr = () => {
     const d = new Date();
