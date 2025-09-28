@@ -72,9 +72,9 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
   // Полноэкранный модал для квиза
   if (showQuiz) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="fixed inset-0 bg-black z-50 flex flex-col pt-safe pb-safe">
         {/* Заголовок */}
-        <div className="bg-gray-900 border-b border-gray-700 p-4 flex items-center justify-between">
+        <div className="bg-gray-900 border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">{quiz.title}</h2>
           <button
             onClick={() => setShowQuiz(false)}
@@ -84,21 +84,21 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
           </button>
         </div>
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col md:flex-row">
           {/* Левая часть - видео */}
-          <div className="flex-1 p-4">
-            <div className="h-full">
+          <div className="w-full md:flex-1 p-3 sm:p-4">
+            <div className="aspect-16-9 md:h-full md:aspect-auto">
               {!showResult ? (
                 <VideoPlayer 
                   src={quiz.videoUrl} 
-                  className="h-full"
+                  className="w-full h-full"
                   hideOverlayControls
                 />
               ) : (
-                <div className="h-full">
+                <div className="w-full h-full">
                   <VideoPlayer 
                     src={quiz.explanationVideoUrl || quiz.videoUrl} 
-                    className="h-full"
+                    className="w-full h-full"
                     hideOverlayControls
                   />
                 </div>
@@ -107,7 +107,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
           </div>
 
           {/* Правая часть - квиз */}
-          <div className="w-96 bg-gray-800 p-6 overflow-y-auto">
+          <div className="w-full md:w-96 bg-gray-800 p-4 md:p-6 overflow-y-auto modal-scroll">
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">Question:</h3>

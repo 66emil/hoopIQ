@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-safe viewport height and safe-area paddings */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Utility: full height that respects iOS dynamic viewport */
+.h-dvh {
+  height: 100dvh;
+}
+
+/* Utility: force 16:9 box via CSS for embeds */
+.aspect-16-9 {
+  position: relative;
+}
+.aspect-16-9::before {
+  content: "";
+  display: block;
+  padding-top: 56.25%;
+}
+.aspect-16-9 > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* Utility: apply safe area paddings */
+.pb-safe { padding-bottom: var(--safe-bottom); }
+.pt-safe { padding-top: var(--safe-top); }
+.pl-safe { padding-left: var(--safe-left); }
+.pr-safe { padding-right: var(--safe-right); }
+
 /* Стили для видео слайдера */
 .slider::-webkit-slider-thumb {
   appearance: none;
@@ -56,4 +93,15 @@ body {
 
 .animate-fade-in-scale {
   animation: fade-in-scale 220ms ease-out;
+}
+
+/* Modals: mobile scroll & overscroll containment */
+.modal-viewport {
+  max-height: 100dvh;
+  overflow: hidden;
+}
+.modal-scroll {
+  max-height: calc(100dvh - 120px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

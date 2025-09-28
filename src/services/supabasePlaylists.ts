@@ -17,7 +17,11 @@ export async function listPlaylistsFromSupabase(): Promise<Playlist[]> {
   for (const p of data || []) {
     const kind = (p.kind as 'quiz' | 'tactic') || 'quiz';
     if (kind === 'tactic') {
-      const { data: items } = await supabase.from(TACTIC_PLAYLIST_ITEMS).select('tacticId').eq('playlistId', p.id);
+      const { data: items, error: itemsErr } = await supabase
+        .from(TACTIC_PLAYLIST_ITEMS)
+        .select('tacticid')
+        .eq('playlistid', p.id);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to load tactic playlist items');
       result.push({
         id: String(p.id),
         title: p.title,
@@ -27,10 +31,14 @@ export async function listPlaylistsFromSupabase(): Promise<Playlist[]> {
         thumbnail: p.thumbnail || undefined,
         kind,
         quizIds: [],
-        tacticIds: (items || []).map((i: any) => String(i.tacticId))
+        tacticIds: (items || []).map((i: any) => String(i.tacticid))
       });
     } else {
-      const { data: items } = await supabase.from(PLAYLIST_ITEMS).select('videoId').eq('playlistId', p.id);
+      const { data: items, error: itemsErr } = await supabase
+        .from(PLAYLIST_ITEMS)
+        .select('videoid')
+        .eq('playlistid', p.id);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to load playlist items');
       result.push({
         id: String(p.id),
         title: p.title,
@@ -39,7 +47,7 @@ export async function listPlaylistsFromSupabase(): Promise<Playlist[]> {
         scenario: p.scenario,
         thumbnail: p.thumbnail || undefined,
         kind,
-        quizIds: (items || []).map((i: any) => String(i.videoId)),
+        quizIds: (items || []).map((i: any) => String(i.videoid)),
         tacticIds: []
       });
     }
@@ -56,14 +64,16 @@ export async function createPlaylistInSupabase(payload: Omit<Playlist, 'id'>): P
   const playlistId = String(data.id);
   if ((data.kind as 'quiz' | 'tactic') === 'tactic') {
     if (tacticIds.length) {
-      const items = tacticIds.map((t: string, idx: number) => ({ playlistId, tacticId: t, position: idx }));
-      await supabase.from(TACTIC_PLAYLIST_ITEMS).insert(items);
+      const items = tacticIds.map((t: string, idx: number) => ({ playlistid: playlistId, tacticid: t, position: idx }));
+      const { error: itemsErr } = await supabase.from(TACTIC_PLAYLIST_ITEMS).insert(items);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to insert tactic playlist items');
     }
     return { ...payload, id: playlistId } as Playlist;
   } else {
     if (quizIds.length) {
-      const items = quizIds.map((v: string, idx: number) => ({ playlistId, videoId: v, position: idx }));
-      await supabase.from(PLAYLIST_ITEMS).insert(items);
+      const items = quizIds.map((v: string, idx: number) => ({ playlistid: playlistId, videoid: v, position: idx }));
+      const { error: itemsErr } = await supabase.from(PLAYLIST_ITEMS).insert(items);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to insert playlist items');
     }
     return { ...payload, id: playlistId } as Playlist;
   }
@@ -72,21 +82,23 @@ export async function createPlaylistInSupabase(payload: Omit<Playlist, 'id'>): P
 export async function updatePlaylistInSupabase(id: string, updates: Partial<Playlist>): Promise<Playlist> {
   const supabase = getSupabaseClient();
   const { quizIds, tacticIds, ...rest } = updates as any;
-  const { data, error } = await supabase.from(PLAYLISTS).update(rest).eq('id', id).select('id, title, description, category, scenario, thumbnail, kind').single();
+  const { error } = await supabase.from(PLAYLISTS).update(rest).eq('id', id).select('id, title, description, category, scenario, thumbnail, kind').single();
   if (error) throw new Error(error.message || 'Failed to update playlist');
   // Update items if provided explicitly
   if (Array.isArray(quizIds)) {
-    await supabase.from(PLAYLIST_ITEMS).delete().eq('playlistId', id);
+    await supabase.from(PLAYLIST_ITEMS).delete().eq('playlistid', id);
     if (quizIds.length) {
-      const items = quizIds.map((v: string, idx: number) => ({ playlistId: id, videoId: v, position: idx }));
-      await supabase.from(PLAYLIST_ITEMS).insert(items);
+      const items = quizIds.map((v: string, idx: number) => ({ playlistid: id, videoid: v, position: idx }));
+      const { error: itemsErr } = await supabase.from(PLAYLIST_ITEMS).insert(items);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to insert playlist items');
     }
   }
   if (Array.isArray(tacticIds)) {
-    await supabase.from(TACTIC_PLAYLIST_ITEMS).delete().eq('playlistId', id);
+    await supabase.from(TACTIC_PLAYLIST_ITEMS).delete().eq('playlistid', id);
     if (tacticIds.length) {
-      const items = tacticIds.map((t: string, idx: number) => ({ playlistId: id, tacticId: t, position: idx }));
-      await supabase.from(TACTIC_PLAYLIST_ITEMS).insert(items);
+      const items = tacticIds.map((t: string, idx: number) => ({ playlistid: id, tacticid: t, position: idx }));
+      const { error: itemsErr } = await supabase.from(TACTIC_PLAYLIST_ITEMS).insert(items);
+      if (itemsErr) throw new Error(itemsErr.message || 'Failed to insert tactic playlist items');
     }
   }
   return { id, ...(rest as any), quizIds: quizIds ?? [], tacticIds: tacticIds ?? [] } as Playlist;

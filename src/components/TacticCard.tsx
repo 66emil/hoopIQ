@@ -164,18 +164,18 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
       />
 
       {showModal && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 pt-safe pb-safe">
           <div className="absolute inset-0 backdrop-blur-sm bg-black/60" onClick={() => setShowModal(false)} />
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden animate-in fade-in duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden animate-in fade-in duration-200 modal-viewport">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-700">
                 <h3 className="text-xl font-semibold text-white">{tactic.title}</h3>
                 <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white transition-colors">
                   <X className="h-6 w-6" />
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                <div className="relative bg-gray-900 aspect-square md:aspect-auto md:h-[560px]">
+                <div className="relative bg-gray-900 aspect-16-9 md:aspect-auto md:h-[560px]">
                   {tactic.stepImages && tactic.stepImages[activeStep] && tactic.stepImages[activeStep].trim() !== '' ? (
                     <img src={tactic.stepImages[activeStep]} alt={`step-${activeStep+1}`} className="w-full h-full object-contain" />
                   ) : tactic.thumbnail ? (
@@ -184,13 +184,13 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
                     <div className="w-full h-full flex items-center justify-center text-gray-500">No image</div>
                   )}
                 </div>
-                <div className="p-6 md:h-[560px] overflow-y-auto flex items-center">
-                  <div key={activeStep} className="text-gray-300 text-lg whitespace-pre-line animate-fade-in-scale w-full">
+                <div className="p-4 sm:p-6 md:h-[560px] overflow-y-auto modal-scroll flex items-start md:items-center">
+                  <div key={activeStep} className="text-gray-300 text-base sm:text-lg whitespace-pre-line animate-fade-in-scale w-full">
                     {tactic.steps?.[activeStep] || ''}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 border-t border-gray-700">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between p-3 sm:p-4 border-t border-gray-700">
                 <button
                   onClick={() => setActiveStep(s => Math.max(0, s - 1))}
                   disabled={activeStep === 0}
@@ -199,7 +199,7 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
                   <ArrowLeft className="h-4 w-4" />
                   <span>Prev</span>
                 </button>
-                <div className="text-sm text-gray-400">Step {activeStep + 1} / {tactic.steps.length}</div>
+                <div className="text-xs sm:text-sm text-gray-400">Step {activeStep + 1} / {tactic.steps.length}</div>
                 {activeStep === tactic.steps.length - 1 ? (
                   <button
                     onClick={handleFinish}
