@@ -11,13 +11,17 @@ import { useAdminData } from './hooks/useAdminData';
 import { useLocalization } from './hooks/useLocalization';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsAdmin } from './hooks/useIsAdmin';
+import { getOrFetchCached } from './services/resourceCache';
+import { isSupabaseEnabled } from './services/supabaseClient';
+import { listVideosFromSupabase } from './services/supabaseVideos';
+import { videosList } from './services/api';
 
 function App() {
   const { t } = useLocalization();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeSection, setActiveSection] = useState<'landing' | 'tactics' | 'quiz' | 'admin' | 'profile'>('tactics');
-  const { progress, completeQuiz } = useProgress();
+  const { progress, completeQuiz, completeTactic } = useProgress();
   const { isAdmin, isAdminLoading } = useIsAdmin();
   const {
     tactics,
@@ -33,6 +37,25 @@ function App() {
     updatePlaylist,
     deletePlaylist
   } = useAdminData();
+
+  // Префетч тяжелых данных (в фоне), чтобы при заходе во вкладки они уже были в кэше.
+  useEffect(() => {
+    const prefetch = async () => {
+      try {
+        await getOrFetchCached(
+          'quizVideos:v1',
+          async () => {
+            const useSupabase = isSupabaseEnabled();
+            return useSupabase ? await listVideosFromSupabase() : await videosList();
+          },
+          { ttlMs: 10 * 60 * 1000, storageKey: 'basketball-iq-videos-cache-v1' }
+        );
+      } catch {
+        // не мешаем UX
+      }
+    };
+    prefetch();
+  }, []);
 
   // Обертки для соответствия сигнатурам AdminPanel (void, не Promise, и полный объект)
   const handleAddTactic = (t: Omit<any, 'id'>) => { addTactic(t).catch(e => alert(e?.message || 'Не удалось сохранить тактику')); };
@@ -61,7 +84,16 @@ function App() {
       case 'landing':
         return <Landing onStartLearning={handleStartLearning} />;
       case 'tactics':
-        return <TacticsSection tactics={tactics} tacticPlaylists={playlists.filter(p => (p.kind || 'quiz') === 'tactic').map(p => ({ id: p.id, title: p.title, description: p.description, category: p.category, scenario: 'custom', thumbnail: p.thumbnail, tacticIds: p.tacticIds || [] }))} />;
+        return (
+          <TacticsSection
+            tactics={tactics}
+            tacticPlaylists={playlists
+              .filter(p => (p.kind || 'quiz') === 'tactic')
+              .map(p => ({ id: p.id, title: p.title, description: p.description, category: p.category, scenario: 'custom', thumbnail: p.thumbnail, tacticIds: p.tacticIds || [] }))}
+            progress={progress}
+            onCompleteTactic={(tacticId) => completeTactic(tacticId)}
+          />
+        );
       case 'quiz':
         return (
           <QuizSection

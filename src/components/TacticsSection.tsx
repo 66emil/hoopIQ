@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { TacticCard } from './TacticCard';
 import { Tactic, TacticPlaylist } from '../types';
-import { useProgress } from '../hooks/useProgress';
 import { BookOpen, Info } from 'lucide-react';
 import { useLocalization } from '../hooks/useLocalization';
 import { TutorialModal } from './TutorialModal';
+import type { UserProgress } from '../types';
 
 interface TacticsSectionProps {
   tactics: Tactic[];
   tacticPlaylists?: TacticPlaylist[];
+  progress: UserProgress;
+  onCompleteTactic: (tacticId: string) => void;
 }
 
-export const TacticsSection = ({ tactics, tacticPlaylists = [] }: TacticsSectionProps) => {
+export const TacticsSection = ({ tactics, tacticPlaylists = [], progress, onCompleteTactic }: TacticsSectionProps) => {
   const { t } = useLocalization();
-  const { progress, completeTactic } = useProgress();
   const [filteredTactics, setFilteredTactics] = useState<Tactic[]>(tactics);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -204,7 +205,7 @@ export const TacticsSection = ({ tactics, tacticPlaylists = [] }: TacticsSection
                 key={tactic.id}
                 tactic={tactic}
                 isCompleted={progress.completedTactics.includes(tactic.id)}
-                onComplete={() => completeTactic(tactic.id)}
+                onComplete={() => onCompleteTactic(tactic.id)}
               />
             ))}
           </div>
