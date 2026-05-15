@@ -46,21 +46,19 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
 
   if (isVerifyEmailError) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg border border-orange-500/40 animate-fade-in-scale">
-          <div className="p-6 text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-full bg-orange-500/15 flex items-center justify-center">
-              <span className="text-orange-400 font-bold">@</span>
-            </div>
-            <h3 className="text-lg font-semibold text-white">Verify your email</h3>
-            <p className="text-gray-300">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="mt-2 inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-lg hover:shadow-orange-500/25"
-            >
-              OK
-            </button>
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'color-mix(in oklab, var(--ink) 30%, transparent)', backdropFilter: 'blur(8px)' }}>
+        <div className="card p-6 text-center space-y-4 animate-fade-in-scale" style={{ maxWidth: 480, width: '100%' }}>
+          <div className="mx-auto icon-soft lg" style={{ margin: '0 auto' }}>
+            <span className="font-bold" style={{ color: 'var(--accent)' }}>@</span>
           </div>
+          <h3 className="font-display text-lg">Verify your email</h3>
+          <p className="muted-2">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="btn btn-primary"
+          >
+            OK
+          </button>
         </div>
       </div>
     );
@@ -70,64 +68,69 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'register' && (
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-          <input 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500" 
-            required 
+          <label className="block text-[13px] font-semibold muted-2 mb-1.5">Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="field"
+            required
           />
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500" 
-          required 
+        <label className="block text-[13px] font-semibold muted-2 mb-1.5">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="field"
+          required
         />
       </div>
       {mode === 'register' && (
-        <label className="flex items-start gap-3 text-sm text-gray-300">
+        <label className="flex items-start gap-3 text-sm muted-2">
           <input
             type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+            className="mt-1 h-4 w-4 rounded"
+            style={{ accentColor: 'var(--accent)' }}
             checked={acceptedPrivacy}
             onChange={(e) => setAcceptedPrivacy(e.target.checked)}
             required
           />
           <span>
             I have read and agree with the{' '}
-            <a href="/privacy" target="_blank" className="text-orange-400 hover:text-orange-300 underline">
+            <a href="/privacy" target="_blank" style={{ color: 'var(--accent)' }} className="underline">
               Privacy Policy
             </a>
           </span>
         </label>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-        <input 
-          type="password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500" 
-          required 
+        <label className="block text-[13px] font-semibold muted-2 mb-1.5">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="field"
+          required
         />
       </div>
-      {error && <div className="text-sm text-red-400">{error}</div>}
-      <button 
-        type="submit" 
+      {error && (
+        <div style={{ background: 'var(--brick-soft)', color: 'var(--brick)', borderRadius: 'var(--r-xs)', padding: '10px 14px', fontSize: 14 }}>
+          {error}
+        </div>
+      )}
+      <button
+        type="submit"
         disabled={submitting || (mode === 'register' && !acceptedPrivacy)}
-        className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white px-4 py-2 rounded transition-colors shadow-lg hover:shadow-orange-500/25 disabled:cursor-not-allowed"
+        className="btn btn-primary w-full"
       >
         {submitting ? 'Loading...' : mode === 'login' ? 'Login' : 'Register'}
       </button>
       {onSwitchMode && (
-        <button 
-          type="button" 
-          className="w-full text-sm text-gray-400 hover:text-orange-400 transition-colors" 
+        <button
+          type="button"
+          className="btn btn-ghost w-full text-sm"
           onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
         >
           {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
@@ -136,5 +139,3 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
     </form>
   );
 };
-
-

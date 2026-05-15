@@ -230,6 +230,20 @@ body {
 .chip.offense { background: var(--slate-soft);  color: var(--slate); }
 .chip.defense { background: var(--brick-soft);  color: var(--brick); }
 
+/* ── Form fields ──────────────────────────────────────────── */
+.field {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-family: var(--font-body); font-size: 14px;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent); }
+.field::placeholder { color: var(--ink-4); }
+.field option { background: var(--bg-card); color: var(--ink); }
+
 /* ── Progress bar ─────────────────────────────────────────── */
 .progress-track {
   height: 8px; border-radius: var(--r-pill);

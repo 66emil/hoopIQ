@@ -12,9 +12,10 @@ interface HeaderProps {
   activeSection: 'tactics' | 'quiz' | 'admin' | 'profile';
   onSectionChange: (section: 'tactics' | 'quiz' | 'admin' | 'profile') => void;
   progress: UserProgress;
+  onLogoClick?: () => void;
 }
 
-export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps) => {
+export const Header = ({ activeSection, onSectionChange, progress, onLogoClick }: HeaderProps) => {
   const { currentUser, isAuthLoading } = useAuth();
   const { isAdmin, isAdminLoading } = useIsAdmin();
   const { t } = useLocalization();
@@ -46,7 +47,7 @@ export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4 py-3">
-          <button onClick={() => onSectionChange('tactics')} className="flex items-center gap-3" style={{ padding: '4px 6px', borderRadius: 14 }}>
+          <button onClick={() => onLogoClick ? onLogoClick() : onSectionChange('tactics')} className="flex items-center gap-3" style={{ padding: '4px 6px', borderRadius: 14 }}>
             <HoopLogo size={36} />
             <div className="text-left">
               <div className="font-display text-xl leading-none" style={{ letterSpacing: '-.03em' }}>hoopIQ</div>

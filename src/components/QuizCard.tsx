@@ -4,13 +4,18 @@ import { QuizQuestion } from '../types';
 import { VideoPlayer } from './VideoPlayer';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../hooks/useAuth';
-import { getDifficultyColor, getDifficultyText } from '../utils/badgeUtils';
 
 interface QuizCardProps {
   quiz: QuizQuestion;
   isCompleted: boolean;
   onComplete: (score: number) => void;
 }
+
+const difficultyChipMap: Record<string, string> = {
+  beginner: 'beg',
+  intermediate: 'med',
+  advanced: 'adv',
+};
 
 export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) => {
   const [showQuiz, setShowQuiz] = useState(false);
@@ -49,11 +54,11 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
 
   if (showQuiz) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col pt-safe pb-safe">
-        <div className="bg-gray-900 border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">{quiz.title}</h2>
-          <button onClick={() => setShowQuiz(false)} className="text-gray-400 hover:text-white transition-colors">
-            <X className="h-6 w-6" />
+      <div className="fixed inset-0 z-50 flex flex-col pt-safe pb-safe" style={{ background: 'var(--bg)' }}>
+        <div className="p-3 sm:p-4 flex items-center justify-between" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--line)' }}>
+          <h2 className="font-display text-xl">{quiz.title}</h2>
+          <button onClick={() => setShowQuiz(false)} className="btn btn-ghost btn-sm">
+            <X size={20} />
           </button>
         </div>
 
@@ -68,26 +73,27 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
             </div>
           </div>
 
-          <div className="w-full md:w-96 bg-gray-800 p-4 md:p-6 overflow-y-auto modal-scroll">
+          <div className="w-full md:w-96 p-4 md:p-6 overflow-y-auto modal-scroll" style={{ background: 'var(--bg-elev)', borderLeft: '1px solid var(--line)' }}>
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Question:</h3>
-                <p className="text-gray-300">{quiz.question}</p>
+                <h3 className="font-display text-lg mb-2">Question:</h3>
+                <p className="muted-2">{quiz.question}</p>
               </div>
 
               {!showResult ? (
                 <>
                   <div className="space-y-3">
-                    <h4 className="font-medium text-white">Options:</h4>
+                    <h4 className="font-semibold">Options:</h4>
                     {quiz.options.map((option, index) => (
                       <button
                         key={index}
                         onClick={() => handleAnswerSelect(index)}
-                        className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${
+                        className="w-full text-left transition-all duration-200"
+                        style={
                           selectedAnswer === index
-                            ? 'bg-orange-500/20 border-orange-500 text-orange-400'
-                            : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                        }`}
+                            ? { background: 'var(--accent-tint)', border: '1px solid var(--accent)', borderRadius: 'var(--r-sm)', padding: '12px', color: 'var(--accent-deep)' }
+                            : { background: 'var(--bg-card)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: '12px', color: 'var(--ink)' }
+                        }
                       >
                         {option}
                       </button>
@@ -97,46 +103,42 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                   <button
                     onClick={handleSubmit}
                     disabled={selectedAnswer === null}
-                    className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                    className="btn btn-primary w-full"
                   >
                     Submit answer
                   </button>
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className={`p-4 rounded-lg ${
-                    selectedAnswer === quiz.correctAnswer
-                      ? 'bg-green-900/30 border border-green-600'
-                      : 'bg-red-900/30 border border-red-600'
-                  }`}>
+                  <div
+                    style={
+                      selectedAnswer === quiz.correctAnswer
+                        ? { background: 'var(--sage-soft)', border: '1px solid var(--sage)', borderRadius: 'var(--r-sm)', padding: 16 }
+                        : { background: 'var(--brick-soft)', border: '1px solid var(--brick)', borderRadius: 'var(--r-sm)', padding: 16 }
+                    }
+                  >
                     <div className="flex items-center space-x-2 mb-2">
                       {selectedAnswer === quiz.correctAnswer
-                        ? <Award className="h-5 w-5 text-green-400" />
-                        : <XCircle className="h-5 w-5 text-red-400" />}
-                      <span className={`font-semibold ${selectedAnswer === quiz.correctAnswer ? 'text-green-400' : 'text-red-400'}`}>
+                        ? <Award size={20} style={{ color: 'var(--sage)' }} />
+                        : <XCircle size={20} style={{ color: 'var(--brick)' }} />}
+                      <span className="font-semibold" style={{ color: selectedAnswer === quiz.correctAnswer ? 'var(--sage)' : 'var(--brick)' }}>
                         {selectedAnswer === quiz.correctAnswer ? 'Correct!' : 'Incorrect'}
                       </span>
                     </div>
                   </div>
 
                   {quiz.explanation && (
-                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
-                      <p className="text-gray-200 text-sm font-medium mb-1">Explanation</p>
-                      <p className="text-gray-300 whitespace-pre-line">{quiz.explanation}</p>
+                    <div style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: 16 }}>
+                      <p className="text-sm font-medium mb-1">Explanation</p>
+                      <p className="muted-2 whitespace-pre-line">{quiz.explanation}</p>
                     </div>
                   )}
 
                   <div className="flex space-x-2">
-                    <button
-                      onClick={resetQuiz}
-                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                    >
+                    <button onClick={resetQuiz} className="btn btn-secondary flex-1">
                       Try again
                     </button>
-                    <button
-                      onClick={() => setShowQuiz(false)}
-                      className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                    >
+                    <button onClick={() => setShowQuiz(false)} className="btn btn-primary flex-1">
                       {selectedAnswer === quiz.correctAnswer ? '+25 points' : 'Close'}
                     </button>
                   </div>
@@ -151,18 +153,18 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
 
   return (
     <>
-      <div className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 border-l-4 border-orange-500">
+      <div className="card">
         <div className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                <h3 className="text-xl font-bold text-white">{quiz.title}</h3>
-                {isCompleted && <CheckCircle className="h-6 w-6 text-green-400" />}
+                <h3 className="font-display text-xl">{quiz.title}</h3>
+                {isCompleted && <CheckCircle size={20} style={{ color: 'var(--sage)' }} />}
               </div>
-              <p className="text-gray-300 mb-3">{quiz.question}</p>
+              <p className="muted-2 mb-3">{quiz.question}</p>
               <div className="flex space-x-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
-                  {getDifficultyText(quiz.difficulty)}
+                <span className={`chip ${difficultyChipMap[quiz.difficulty] ?? ''}`}>
+                  {quiz.difficulty}
                 </span>
               </div>
             </div>
@@ -173,18 +175,19 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
               <img
                 src={quiz.thumbnail}
                 alt={quiz.title}
-                className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                className="w-full h-48 object-cover rounded-lg border-line"
+                style={{ border: '1px solid var(--line)' }}
               />
             ) : (
-              <div className="w-full h-48 bg-gray-700 rounded-lg border border-gray-600" />
+              <div className="w-full h-48 rounded-lg" style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)' }} />
             )}
           </div>
 
           <button
             onClick={handleStartQuiz}
-            className="flex items-center justify-center space-x-2 w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-orange-500/25"
+            className="btn btn-primary w-full"
           >
-            <Play className="h-5 w-5" />
+            <Play size={18} />
             <span>Start quiz</span>
           </button>
         </div>

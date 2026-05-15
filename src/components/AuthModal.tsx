@@ -16,7 +16,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
-  
+
   const { login, register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +30,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         return;
       }
       let result;
-      
+
       if (isLogin) {
         result = await login(email, password);
       } else {
@@ -40,7 +40,6 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
       if (result.ok) {
         onSuccess();
         onClose();
-        // Сброс формы
         setEmail('');
         setPassword('');
         setName('');
@@ -76,39 +75,34 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
   if (isVerifyEmailError) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg border border-orange-500/40 animate-fade-in-scale">
-          <div className="p-6 text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-full bg-orange-500/15 flex items-center justify-center">
-              <Mail className="h-6 w-6 text-orange-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Verify your email</h3>
-            <p className="text-gray-300">{error}</p>
-            <button
-              onClick={handleClose}
-              className="mt-2 inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-lg hover:shadow-orange-500/25"
-            >
-              OK
-            </button>
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'color-mix(in oklab, var(--ink) 30%, transparent)', backdropFilter: 'blur(8px)' }}>
+        <div className="card p-6 text-center space-y-4 animate-fade-in-scale" style={{ maxWidth: 480, width: '100%' }}>
+          <div className="mx-auto icon-soft lg" style={{ margin: '0 auto' }}>
+            <Mail size={24} />
           </div>
+          <h3 className="font-display text-lg">Verify your email</h3>
+          <p className="muted-2">{error}</p>
+          <button onClick={handleClose} className="btn btn-primary">
+            OK
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-600">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ background: 'color-mix(in oklab, var(--ink) 30%, transparent)', backdropFilter: 'blur(8px)' }}
+    >
+      <div className="card animate-fade-in-scale" style={{ borderRadius: 'var(--r-xl)', maxWidth: 480, width: '100%' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-600">
-          <h2 className="text-xl font-bold text-white">
+        <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', padding: '20px 24px' }}>
+          <h2 className="font-display text-xl">
             {isLogin ? 'Login' : 'Register'}
           </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="h-6 w-6" />
+          <button onClick={handleClose} className="btn btn-ghost btn-sm">
+            <X size={20} />
           </button>
         </div>
 
@@ -116,15 +110,15 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                <User className="h-4 w-4 inline mr-2" />
+              <label className="block text-[13px] font-semibold muted-2 mb-1.5">
+                <User size={14} className="inline mr-1" />
                 Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 transition-colors"
+                className="field"
                 placeholder="Enter your name"
                 required={!isLogin}
               />
@@ -132,47 +126,48 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              <Mail className="h-4 w-4 inline mr-2" />
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">
+              <Mail size={14} className="inline mr-1" />
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 transition-colors"
+              className="field"
               placeholder="Enter your email"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              <Lock className="h-4 w-4 inline mr-2" />
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">
+              <Lock size={14} className="inline mr-1" />
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500 transition-colors"
+              className="field"
               placeholder="Enter your password"
               required
             />
           </div>
 
           {!isLogin && (
-            <label className="flex items-start gap-3 text-sm text-gray-300">
+            <label className="flex items-start gap-3 text-sm muted-2">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                className="mt-1 h-4 w-4 rounded"
+                style={{ accentColor: 'var(--accent)' }}
                 checked={acceptedPrivacy}
                 onChange={(e) => setAcceptedPrivacy(e.target.checked)}
                 required
               />
               <span>
                 I have read and agree with the{' '}
-                <a href="/privacy" target="_blank" className="text-orange-400 hover:text-orange-300 underline">
+                <a href="/privacy" target="_blank" style={{ color: 'var(--accent)' }} className="underline">
                   Privacy Policy
                 </a>
               </span>
@@ -180,28 +175,26 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           )}
 
           {error && (
-            <div className="bg-red-900/30 border border-red-600 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div style={{ background: 'var(--brick-soft)', color: 'var(--brick)', borderRadius: 'var(--r-xs)', padding: '10px 14px', fontSize: 14 }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={isLoading || (!isLogin && !acceptedPrivacy)}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg hover:shadow-orange-500/25 disabled:cursor-not-allowed"
+            className="btn btn-primary w-full"
           >
             {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}
           </button>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-orange-400 hover:text-orange-300 text-sm transition-colors"
-            >
-              {isLogin ? "Don't have an account? Register" : 'Already have an account? Login'}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            className="btn btn-ghost w-full"
+          >
+            {isLogin ? "Don't have an account? Register" : 'Already have an account? Login'}
+          </button>
         </form>
       </div>
     </div>

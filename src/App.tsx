@@ -144,6 +144,7 @@ function App() {
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
         progress={progress}
+        onLogoClick={() => navigate('/')}
       />
       <main className="flex-1 relative z-10">
         {renderSection()}

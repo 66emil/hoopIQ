@@ -45,21 +45,22 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-4">
-          <Video className="h-8 w-8 text-orange-500" />
-          <h2 className="text-3xl font-bold text-white">Reading Combinations</h2>
+          <Video size={32} style={{ color: 'var(--accent)' }} />
+          <h2 className="font-display text-3xl">Reading Combinations</h2>
         </div>
-        <p className="text-gray-300 mb-4">
+        <p className="muted-2 mb-4">
           Analyze game situations and make the right decisions.
           Correct answer gives +25 XP.
         </p>
 
         <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-3 md:space-y-0 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">Category</label>
             <select
               value={activeCategory}
               onChange={e => setActiveCategory(e.target.value as typeof activeCategory)}
-              className="px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="field"
+              style={{ width: 'auto' }}
             >
               <option value="all">All</option>
               <option value="offense">Offense</option>
@@ -67,11 +68,12 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Difficulty</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">Difficulty</label>
             <select
               value={activeDifficulty}
               onChange={e => setActiveDifficulty(e.target.value as typeof activeDifficulty)}
-              className="px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="field"
+              style={{ width: 'auto' }}
             >
               <option value="all">All</option>
               <option value="beginner">Beginner</option>
@@ -80,11 +82,12 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Playlist</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">Playlist</label>
             <select
               value={activePlaylistId}
               onChange={e => setActivePlaylistId(e.target.value)}
-              className="px-3 py-2 border border-gray-600 rounded bg-gray-800 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="field"
+              style={{ width: 'auto' }}
             >
               <option value="all">All playlists</option>
               {quizPlaylists.map(playlist => (
@@ -96,14 +99,14 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
           </div>
         </div>
 
-        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+        <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-orange-400">Quiz progress</span>
-            <span className="text-sm text-orange-300">{completedCount}/{filteredQuizzes.length}</span>
+            <span className="text-sm font-medium muted" style={{ color: 'var(--accent)' }}>Quiz progress</span>
+            <span className="text-sm" style={{ color: 'var(--accent)' }}>{completedCount}/{filteredQuizzes.length}</span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
+          <div className="progress-track">
             <div
-              className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+              className="progress-bar"
               style={{ width: `${filteredQuizzes.length > 0 ? (completedCount / filteredQuizzes.length) * 100 : 0}%` }}
             />
           </div>

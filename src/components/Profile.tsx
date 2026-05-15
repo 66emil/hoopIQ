@@ -27,7 +27,6 @@ export const Profile = ({ progress }: ProfileProps) => {
 
   useEffect(() => { setName(currentUser?.name ?? ''); }, [currentUser?.name]);
 
-  // Кэш профиля per-user в localStorage
   const getProfileCacheKey = (userId: string) => `profile-cache-${userId}`;
   type CachedProfile = {
     nickname?: string | null;
@@ -54,7 +53,6 @@ export const Profile = ({ progress }: ProfileProps) => {
   const writeCache = (userId: string, p: CachedProfile) => {
     try {
       localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(p));
-      // Для обратной совместимости оставим прежние ключи
       if (p.avatarUrl != null) localStorage.setItem('profile-avatar', p.avatarUrl || '');
       if (p.bio != null) localStorage.setItem('profile-bio', p.bio || '');
       if (p.position != null) localStorage.setItem('profile-position', p.position || '');
@@ -78,13 +76,11 @@ export const Profile = ({ progress }: ProfileProps) => {
   const saveBio = (v: string) => { setBio(v); localStorage.setItem('profile-bio', v); setDirty(true); };
   const savePosition = (v: string) => { setPosition(v); localStorage.setItem('profile-position', v); setDirty(true); };
 
-  // Загрузка профиля: сначала локальный кэш, затем фоновой запрос к Supabase
   useEffect(() => {
     const load = async () => {
       if (!currentUser) return;
       if (!isSupabaseEnabled()) return;
 
-      // 1) Показать данные из кэша мгновенно
       try {
         const cachedRaw = localStorage.getItem(getProfileCacheKey(currentUser.id));
         if (cachedRaw) {
@@ -93,7 +89,6 @@ export const Profile = ({ progress }: ProfileProps) => {
         }
       } catch {}
 
-      // 2) Фоново запросить актуальные данные из Supabase
       try {
         const p = await getProfile(currentUser.id);
         if (!p) return;
@@ -146,7 +141,6 @@ export const Profile = ({ progress }: ProfileProps) => {
         level: progress.level,
         xp: progress.totalScore
       });
-      // Синхронно обновим локальный кэш
       writeCache(currentUser.id, {
         nickname: name,
         avatarUrl: avatar,
@@ -166,15 +160,15 @@ export const Profile = ({ progress }: ProfileProps) => {
   };
 
   if (isAuthLoading) {
-    return <div className="max-w-5xl mx-auto p-6 text-gray-300">Loading profile…</div>;
+    return <div className="max-w-5xl mx-auto p-6 muted">Loading profile…</div>;
   }
 
   if (!currentUser) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <h2 className="text-3xl font-bold text-white mb-4">My profile</h2>
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Login / Registration</h3>
+        <h2 className="font-display text-3xl mb-4">My profile</h2>
+        <div className="card p-6">
+          <h3 className="font-display text-xl mb-4">Login / Registration</h3>
           <AuthForm
             mode={authMode}
             onLogin={async (email, password) => {
@@ -194,34 +188,38 @@ export const Profile = ({ progress }: ProfileProps) => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-      <h2 className="text-3xl font-bold text-white">My profile</h2>
+      <h2 className="font-display text-3xl">My profile</h2>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 bg-gray-800 rounded-xl border border-gray-700 p-6 flex flex-col items-center text-center">
-          <div className="w-32 h-32 rounded-full bg-gray-700 overflow-hidden mb-2 border border-gray-600 relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+        <div className="md:col-span-1 card p-6 flex flex-col items-center text-center">
+          <div
+            className="w-32 h-32 rounded-full overflow-hidden mb-2 relative cursor-pointer"
+            style={{ border: '1px solid var(--line)' }}
+            onClick={() => fileInputRef.current?.click()}
+          >
             {avatar ? (
               <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Click to upload</div>
+              <div className="w-full h-full flex items-center justify-center muted text-sm" style={{ background: 'var(--bg-soft)' }}>Click to upload</div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           </div>
-          <div className="text-gray-300 text-xs mb-4 truncate max-w-full">{currentUser.email}</div>
+          <div className="muted text-xs mb-4 truncate max-w-full">{currentUser.email}</div>
           <div className="w-full mt-2 grid grid-cols-2 gap-4">
             {(() => {
               const info = getLevelInfo(progress.totalScore);
               return (
                 <>
-                  <div className="bg-orange-900/30 p-4 rounded border border-orange-600 col-span-2">
-                    <div className="text-sm text-orange-400">Level</div>
-                    <div className="text-2xl font-bold text-orange-300 flex items-center space-x-2 truncate">
+                  <div className="col-span-2" style={{ background: 'var(--accent-tint)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--r-sm)', padding: 16 }}>
+                    <div className="text-sm muted">Level</div>
+                    <div className="font-display text-xl flex items-center space-x-2 truncate" style={{ color: 'var(--accent-deep)' }}>
                       <span className="shrink-0">{info.badge}</span>
                       <span className="truncate max-w-full">{info.name}</span>
                     </div>
                   </div>
-                  <div className="bg-blue-900/30 p-4 rounded border border-blue-600 col-span-2">
-                    <div className="text-sm text-blue-400">XP</div>
-                    <div className="text-2xl font-bold text-blue-300 truncate">{progress.totalScore}</div>
+                  <div className="col-span-2" style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: 16 }}>
+                    <div className="text-sm muted">XP</div>
+                    <div className="font-display text-xl truncate" style={{ color: 'var(--slate)' }}>{progress.totalScore}</div>
                   </div>
                 </>
               );
@@ -229,31 +227,31 @@ export const Profile = ({ progress }: ProfileProps) => {
           </div>
         </div>
 
-        <div className="md:col-span-2 bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4">
+        <div className="md:col-span-2 card p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Nickname</label>
-            <input 
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Nickname</label>
+            <input
               value={name}
               onChange={(e) => { setName(e.target.value); setDirty(true); }}
-              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="field"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Bio</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Bio</label>
             <textarea
               value={bio}
               onChange={(e) => saveBio(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500 min-h-[100px]"
+              className="field min-h-[100px]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Position</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Position</label>
             <select
               value={position}
               onChange={(e) => savePosition(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+              className="field"
             >
               <option value="">Select position</option>
               <option value="Point Guard">Point Guard</option>
@@ -264,26 +262,30 @@ export const Profile = ({ progress }: ProfileProps) => {
             </select>
           </div>
 
-          
-
           <div className="pt-4">
             <button
               disabled={!dirty}
               onClick={saveProfileToSupabase}
-              className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors ${dirty ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-700/60 text-white/60 cursor-not-allowed'}`}
+              className="btn btn-primary w-full"
             >
               Save changes
             </button>
           </div>
           <div className="pt-2">
-            <button onClick={logout} className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition-colors">Logout</button>
+            <button
+              onClick={logout}
+              className="btn w-full"
+              style={{ background: 'var(--brick-soft)', color: 'var(--brick)' }}
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
 
       {showCropper && avatar && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-lg p-4">
+          <div className="card w-full max-w-lg p-4">
             <div className="relative w-full h-72 bg-black rounded-lg overflow-hidden">
               <Cropper
                 image={avatar}
@@ -298,7 +300,7 @@ export const Profile = ({ progress }: ProfileProps) => {
             </div>
             <div className="mt-4 flex items-center gap-3">
               <input type="range" min={0.5} max={2} step={0.01} value={avatarZoom} onChange={(e) => setAvatarZoom(parseFloat(e.target.value))} className="flex-1" />
-              <button className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600" onClick={async () => {
+              <button className="btn btn-secondary" onClick={async () => {
                 if (!avatar || !croppedAreaPixels) { setShowCropper(false); return; }
                 try {
                   const croppedDataUrl = await (async () => {
@@ -335,5 +337,3 @@ export const Profile = ({ progress }: ProfileProps) => {
     </div>
   );
 };
-
-
