@@ -53,6 +53,7 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
   const [showModal, setShowModal] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [pendingOpen, setPendingOpen] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
   const { currentUser, accessToken, isAuthLoading } = useAuth();
   const { t, language } = useLocalization();
 
@@ -82,6 +83,11 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
     else setShowAuthModal(true);
     setPendingOpen(false);
   }, [pendingOpen, isAuthLoading, currentUser, accessToken]);
+
+  useEffect(() => {
+    const src = tactic.stepImages?.[activeStep]?.trim() || tactic.thumbnail;
+    if (src) setImgLoading(true);
+  }, [activeStep]);
 
   const coverBg = isOff
     ? 'linear-gradient(135deg, color-mix(in oklab, var(--accent-tint) 80%, var(--bg-soft)) 0%, color-mix(in oklab, var(--accent-soft) 50%, var(--bg-elev)) 100%)'
@@ -204,10 +210,38 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
 
               <div className="grid grid-cols-1 md:grid-cols-2 min-h-0 flex-1">
                 <div className="relative md:h-[560px] aspect-16-9 md:aspect-auto" style={{ background: 'var(--bg-soft)' }}>
+                  {/* Skeleton shown while image loads */}
+                  {imgLoading && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(90deg, var(--bg-soft) 0%, var(--bg-elev) 50%, var(--bg-soft) 100%)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 1.2s linear infinite',
+                        zIndex: 1,
+                      }}
+                    />
+                  )}
                   {tactic.stepImages?.[activeStep]?.trim() ? (
-                    <img src={tactic.stepImages[activeStep]} alt={`step-${activeStep + 1}`} className="w-full h-full object-contain" />
+                    <img
+                      key={`step-img-${activeStep}`}
+                      src={tactic.stepImages[activeStep]}
+                      alt={`step-${activeStep + 1}`}
+                      className="w-full h-full object-contain"
+                      style={{ opacity: imgLoading ? 0 : 1, transition: 'opacity .2s' }}
+                      onLoad={() => setImgLoading(false)}
+                      onError={() => setImgLoading(false)}
+                    />
                   ) : tactic.thumbnail ? (
-                    <img src={tactic.thumbnail} alt="thumbnail" className="w-full h-full object-contain" />
+                    <img
+                      key="step-img-thumb"
+                      src={tactic.thumbnail}
+                      alt="thumbnail"
+                      className="w-full h-full object-contain"
+                      style={{ opacity: imgLoading ? 0 : 1, transition: 'opacity .2s' }}
+                      onLoad={() => setImgLoading(false)}
+                      onError={() => setImgLoading(false)}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center muted">No image</div>
                   )}

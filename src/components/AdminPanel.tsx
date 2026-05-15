@@ -187,6 +187,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Title (EN)</label>
                     <input
+                      key="tactic-title-en"
                       type="text"
                       value={tacticForm.title}
                       onChange={e => setTacticForm(f => ({ ...f, title: e.target.value }))}
@@ -197,6 +198,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Title (RU)</label>
                     <input
+                      key="tactic-title-ru"
                       type="text"
                       value={tacticForm.titleRu}
                       onChange={e => setTacticForm(f => ({ ...f, titleRu: e.target.value }))}
@@ -245,6 +247,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Description (EN)</label>
                   <textarea
+                    key="tactic-desc-en"
                     value={tacticForm.description}
                     onChange={e => setTacticForm(f => ({ ...f, description: e.target.value }))}
                     rows={3}
@@ -255,6 +258,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Description (RU)</label>
                   <textarea
+                    key="tactic-desc-ru"
                     value={tacticForm.descriptionRu}
                     onChange={e => setTacticForm(f => ({ ...f, descriptionRu: e.target.value }))}
                     rows={3}
@@ -434,6 +438,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Title (EN)</label>
                     <input
+                      key="quiz-title-en"
                       type="text"
                       value={quizForm.title}
                       onChange={e => setQuizForm(f => ({ ...f, title: e.target.value }))}
@@ -444,6 +449,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Title (RU)</label>
                     <input
+                      key="quiz-title-ru"
                       type="text"
                       value={quizForm.titleRu}
                       onChange={e => setQuizForm(f => ({ ...f, titleRu: e.target.value }))}
@@ -492,6 +498,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Question (EN)</label>
                   <textarea
+                    key="quiz-question-en"
                     value={quizForm.question}
                     onChange={e => setQuizForm(f => ({ ...f, question: e.target.value }))}
                     rows={3}
@@ -502,6 +509,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Question (RU)</label>
                   <textarea
+                    key="quiz-question-ru"
                     value={quizForm.questionRu}
                     onChange={e => setQuizForm(f => ({ ...f, questionRu: e.target.value }))}
                     rows={3}
