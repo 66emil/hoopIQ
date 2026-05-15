@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Cropper from 'react-easy-crop';
 import { useAuth } from '../hooks/useAuth';
+import { useLocalization } from '../hooks/useLocalization';
 import { getLevelInfo } from '../services/levels';
 import { UserProgress } from '../types';
 import { AuthForm } from './AuthForm';
@@ -13,6 +14,7 @@ interface ProfileProps {
 
 export const Profile = ({ progress }: ProfileProps) => {
   const { currentUser, logout, updateProfile, login, register, isAuthLoading } = useAuth();
+  const { t } = useLocalization();
   const [name, setName] = useState(currentUser?.name ?? '');
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [avatar, setAvatar] = useState<string | null>(() => localStorage.getItem('profile-avatar'));
@@ -160,15 +162,15 @@ export const Profile = ({ progress }: ProfileProps) => {
   };
 
   if (isAuthLoading) {
-    return <div className="max-w-5xl mx-auto p-6 muted">Loading profile…</div>;
+    return <div className="max-w-5xl mx-auto p-6 muted">{t('profile.loading')}</div>;
   }
 
   if (!currentUser) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <h2 className="font-display text-3xl mb-4">My profile</h2>
+        <h2 className="font-display text-2xl sm:text-3xl mb-4">{t('profile.heading')}</h2>
         <div className="card p-6">
-          <h3 className="font-display text-xl mb-4">Login / Registration</h3>
+          <h3 className="font-display text-xl mb-4">{t('profile.loginHeading')}</h3>
           <AuthForm
             mode={authMode}
             onLogin={async (email, password) => {
@@ -188,7 +190,7 @@ export const Profile = ({ progress }: ProfileProps) => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-      <h2 className="font-display text-3xl">My profile</h2>
+      <h2 className="font-display text-2xl sm:text-3xl">{t('profile.heading')}</h2>
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 card p-6 flex flex-col items-center text-center">
@@ -200,7 +202,7 @@ export const Profile = ({ progress }: ProfileProps) => {
             {avatar ? (
               <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center muted text-sm" style={{ background: 'var(--bg-soft)' }}>Click to upload</div>
+              <div className="w-full h-full flex items-center justify-center muted text-sm" style={{ background: 'var(--bg-soft)' }}>{t('profile.avatar.click')}</div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           </div>
@@ -211,14 +213,14 @@ export const Profile = ({ progress }: ProfileProps) => {
               return (
                 <>
                   <div className="col-span-2" style={{ background: 'var(--accent-tint)', border: '1px solid var(--accent-soft)', borderRadius: 'var(--r-sm)', padding: 16 }}>
-                    <div className="text-sm muted">Level</div>
+                    <div className="text-sm muted">{t('profile.level')}</div>
                     <div className="font-display text-xl flex items-center space-x-2 truncate" style={{ color: 'var(--accent-deep)' }}>
                       <span className="shrink-0">{info.badge}</span>
                       <span className="truncate max-w-full">{info.name}</span>
                     </div>
                   </div>
                   <div className="col-span-2" style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: 16 }}>
-                    <div className="text-sm muted">XP</div>
+                    <div className="text-sm muted">{t('profile.xp')}</div>
                     <div className="font-display text-xl truncate" style={{ color: 'var(--slate)' }}>{progress.totalScore}</div>
                   </div>
                 </>
@@ -229,7 +231,7 @@ export const Profile = ({ progress }: ProfileProps) => {
 
         <div className="md:col-span-2 card p-6 space-y-4">
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Nickname</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('profile.nickname')}</label>
             <input
               value={name}
               onChange={(e) => { setName(e.target.value); setDirty(true); }}
@@ -238,7 +240,7 @@ export const Profile = ({ progress }: ProfileProps) => {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Bio</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('profile.bio')}</label>
             <textarea
               value={bio}
               onChange={(e) => saveBio(e.target.value)}
@@ -247,18 +249,18 @@ export const Profile = ({ progress }: ProfileProps) => {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1.5">Position</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('profile.position')}</label>
             <select
               value={position}
               onChange={(e) => savePosition(e.target.value)}
               className="field"
             >
-              <option value="">Select position</option>
-              <option value="Point Guard">Point Guard</option>
-              <option value="Shooting Guard">Shooting Guard</option>
-              <option value="Small Forward">Small Forward</option>
-              <option value="Power Forward">Power Forward</option>
-              <option value="Center">Center</option>
+              <option value="">{t('profile.position.select')}</option>
+              <option value="Point Guard">{t('profile.position.pg')}</option>
+              <option value="Shooting Guard">{t('profile.position.sg')}</option>
+              <option value="Small Forward">{t('profile.position.sf')}</option>
+              <option value="Power Forward">{t('profile.position.pf')}</option>
+              <option value="Center">{t('profile.position.c')}</option>
             </select>
           </div>
 
@@ -268,7 +270,7 @@ export const Profile = ({ progress }: ProfileProps) => {
               onClick={saveProfileToSupabase}
               className="btn btn-primary w-full"
             >
-              Save changes
+              {t('profile.save')}
             </button>
           </div>
           <div className="pt-2">
@@ -277,7 +279,7 @@ export const Profile = ({ progress }: ProfileProps) => {
               className="btn w-full"
               style={{ background: 'var(--brick-soft)', color: 'var(--brick)' }}
             >
-              Logout
+              {t('profile.logout')}
             </button>
           </div>
         </div>
@@ -286,7 +288,7 @@ export const Profile = ({ progress }: ProfileProps) => {
       {showCropper && avatar && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="card w-full max-w-lg p-4">
-            <div className="relative w-full h-72 bg-black rounded-lg overflow-hidden">
+            <div className="relative w-full h-48 sm:h-72 bg-black rounded-lg overflow-hidden">
               <Cropper
                 image={avatar}
                 crop={avatarCrop}
@@ -300,7 +302,7 @@ export const Profile = ({ progress }: ProfileProps) => {
             </div>
             <div className="mt-4 flex items-center gap-3">
               <input type="range" min={0.5} max={2} step={0.01} value={avatarZoom} onChange={(e) => setAvatarZoom(parseFloat(e.target.value))} className="flex-1" />
-              <button className="btn btn-secondary" onClick={async () => {
+              <button className="btn btn-secondary" aria-label={t('profile.done')} onClick={async () => {
                 if (!avatar || !croppedAreaPixels) { setShowCropper(false); return; }
                 try {
                   const croppedDataUrl = await (async () => {
@@ -329,7 +331,7 @@ export const Profile = ({ progress }: ProfileProps) => {
                   localStorage.setItem('profile-avatar', croppedDataUrl);
                 } catch {}
                 setShowCropper(false);
-              }}>Done</button>
+              }}>{t('profile.done')}</button>
             </div>
           </div>
         </div>

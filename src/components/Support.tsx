@@ -1,12 +1,13 @@
-// no React import needed for JSX with react-jsx runtime
+import React from 'react';
+import { useLocalization } from '../hooks/useLocalization';
 
 export const Support = () => {
+  const { t } = useLocalization();
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-4">Support</h1>
+      <h1 className="text-3xl font-bold mb-4">{t('support.heading')}</h1>
       <p className="muted-2 mb-8">
-        Write to us in any social network. We are happy to hear your questions and
-        suggestions. Below you will find quick links to our Telegram, Instagram and X.
+        {t('support.desc')} Below you will find quick links to our Telegram, Instagram and X.
       </p>
 
       <div className="flex items-center gap-6">
@@ -48,7 +49,7 @@ export const Support = () => {
       </div>
 
       <div className="mt-10 muted-2">
-        Or email us at
+        {t('support.email')}
         {' '}<a href="mailto:hoopiq.pro@gmail.com" className="hover:text-ink">hoopiq.pro@gmail.com</a>.
       </div>
     </div>

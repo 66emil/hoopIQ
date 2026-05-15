@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const { login, register } = useAuth();
+  const { t } = useLocalization();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
     try {
       if (!isLogin && !acceptedPrivacy) {
-        setError('Please accept the Privacy Policy');
+        setError(t('auth.accept.required'));
         return;
       }
       let result;
@@ -80,7 +82,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           <div className="mx-auto icon-soft lg" style={{ margin: '0 auto' }}>
             <Mail size={24} />
           </div>
-          <h3 className="font-display text-lg">Verify your email</h3>
+          <h3 className="font-display text-lg">{t('auth.verify.title')}</h3>
           <p className="muted-2">{error}</p>
           <button onClick={handleClose} className="btn btn-primary">
             OK
@@ -99,7 +101,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         {/* Header */}
         <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--line)', padding: '20px 24px' }}>
           <h2 className="font-display text-xl">
-            {isLogin ? 'Login' : 'Register'}
+            {t(isLogin ? 'auth.login.title' : 'auth.register.title')}
           </h2>
           <button onClick={handleClose} className="btn btn-ghost btn-sm">
             <X size={20} />
@@ -107,19 +109,19 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           {!isLogin && (
             <div>
               <label className="block text-[13px] font-semibold muted-2 mb-1.5">
                 <User size={14} className="inline mr-1" />
-                Name
+                {t('auth.name')}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="field"
-                placeholder="Enter your name"
+                placeholder={t('auth.name')}
                 required={!isLogin}
               />
             </div>
@@ -128,14 +130,14 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           <div>
             <label className="block text-[13px] font-semibold muted-2 mb-1.5">
               <Mail size={14} className="inline mr-1" />
-              Email
+              {t('auth.email')}
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="field"
-              placeholder="Enter your email"
+              placeholder={t('auth.email')}
               required
             />
           </div>
@@ -143,14 +145,14 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           <div>
             <label className="block text-[13px] font-semibold muted-2 mb-1.5">
               <Lock size={14} className="inline mr-1" />
-              Password
+              {t('auth.password')}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="field"
-              placeholder="Enter your password"
+              placeholder={t('auth.password')}
               required
             />
           </div>
@@ -166,9 +168,9 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 required
               />
               <span>
-                I have read and agree with the{' '}
+                {t('auth.accept.privacy')}{' '}
                 <a href="/privacy" target="_blank" style={{ color: 'var(--accent)' }} className="underline">
-                  Privacy Policy
+                  {t('auth.privacy.link')}
                 </a>
               </span>
             </label>
@@ -185,7 +187,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             disabled={isLoading || (!isLogin && !acceptedPrivacy)}
             className="btn btn-primary w-full"
           >
-            {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}
+            {isLoading ? t('auth.loading') : t(isLogin ? 'auth.login.button' : 'auth.register.button')}
           </button>
 
           <button
@@ -193,7 +195,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             onClick={() => setIsLogin(!isLogin)}
             className="btn btn-ghost w-full"
           >
-            {isLogin ? "Don't have an account? Register" : 'Already have an account? Login'}
+            {isLogin ? t('auth.no.account') : t('auth.have.account')}
           </button>
         </form>
       </div>

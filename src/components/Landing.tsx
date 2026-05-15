@@ -27,20 +27,20 @@ export const Landing = ({ onStartLearning }: LandingProps) => {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div className="container mx-auto px-4 py-24 text-center">
+      <div className="container mx-auto px-4 py-14 sm:py-24 text-center">
         <div className="max-w-4xl mx-auto rise">
-          <h1 className="text-display text-5xl md:text-7xl mb-4" style={{ color: 'var(--accent)' }}>
+          <h1 className="text-display text-4xl sm:text-5xl md:text-7xl mb-4" style={{ color: 'var(--accent)' }}>
             {t('landing.hero.title1')}
           </h1>
-          <h2 className="text-display text-4xl md:text-6xl mb-8">
+          <h2 className="text-display text-3xl sm:text-4xl md:text-6xl mb-8">
             {t('landing.hero.title2')}
           </h2>
-          <p className="text-xl md:text-2xl muted-2 mb-12 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl md:text-2xl muted-2 mb-12 leading-relaxed max-w-2xl mx-auto">
             {t('landing.hero.subtitle')}
           </p>
 
-          <div className="card p-8 mb-16 text-center">
-            <h3 className="text-display text-2xl mb-4" style={{ color: 'var(--accent)' }}>
+          <div className="card p-5 sm:p-8 mb-10 sm:mb-16 text-center">
+            <h3 className="text-display text-xl sm:text-2xl mb-4" style={{ color: 'var(--accent)' }}>
               {t('landing.features.title')}
             </h3>
             <p className="muted-2 text-lg">{t('landing.features.subtitle')}</p>
@@ -49,7 +49,7 @@ export const Landing = ({ onStartLearning }: LandingProps) => {
       </div>
 
       {/* Features */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-10 sm:py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto rise-stagger">
           {features.map(({ Icon, titleKey, descKey }) => (
             <div key={titleKey} className="card p-6">
@@ -64,9 +64,9 @@ export const Landing = ({ onStartLearning }: LandingProps) => {
       </div>
 
       {/* Benefits */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-10 sm:py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-display text-3xl mb-12">{t('landing.benefits.title')}</h3>
+          <h3 className="text-display text-2xl sm:text-3xl mb-12">{t('landing.benefits.title')}</h3>
           <div className="grid md:grid-cols-2 gap-6 rise-stagger">
             {benefits.map(({ titleKey, descKey }) => (
               <div key={titleKey} className="card p-6 text-left">
@@ -79,7 +79,7 @@ export const Landing = ({ onStartLearning }: LandingProps) => {
       </div>
 
       {/* CTA */}
-      <div className="container mx-auto px-4 py-24 text-center">
+      <div className="container mx-auto px-4 py-14 sm:py-24 text-center">
         <button onClick={onStartLearning} className="btn btn-primary btn-lg">
           {t('landing.cta.button')} <ArrowRight size={20} className="arrow" />
         </button>

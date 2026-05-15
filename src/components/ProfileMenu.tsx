@@ -65,7 +65,7 @@ export const ProfileMenu = ({ score, userName, onOpenProfile, onSignOut }: Profi
         >
           <LvlBadge size={18} />
         </span>
-        <div className="text-left" style={{ lineHeight: 1.15 }}>
+        <div className="text-left hidden sm:block" style={{ lineHeight: 1.15 }}>
           <div className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>{userName}</div>
           <div className="text-[11px]" style={{ color: 'var(--ink-3)' }}>{lvl.name}</div>
         </div>

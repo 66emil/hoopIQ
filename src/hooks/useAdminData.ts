@@ -6,14 +6,14 @@ import { listTacticsFromSupabase, createTacticInSupabase, updateTacticInSupabase
 import { listQuizzesFromSupabase, createQuizInSupabase, updateQuizInSupabase, deleteQuizInSupabase } from '../services/supabaseQuizzes';
 import { listPlaylistsFromSupabase, createPlaylistInSupabase, updatePlaylistInSupabase, deletePlaylistInSupabase } from '../services/supabasePlaylists';
 import { tacticsList, tacticsCreate, tacticsUpdate, tacticsDelete, quizzesList, quizzesCreate, quizzesUpdate, quizzesDelete, playlistsList, playlistsCreate, playlistsUpdate, playlistsDelete } from '../services/api';
-import { getOrFetchCached, readCachedValue, writeCachedValue } from '../services/resourceCache';
+import { readCachedValue, readCachedValueStale, writeCachedValue } from '../services/resourceCache';
 
 const USE_SUPABASE = isSupabaseEnabled();
 
 const ADMIN_STORAGE_KEY = 'basketball-iq-admin-data';
 const ADMIN_CACHE_KEY = 'adminData:v1';
 const ADMIN_CACHE_STORAGE_KEY = 'basketball-iq-admin-cache-v1';
-const ADMIN_CACHE_TTL_MS = 10 * 60 * 1000;
+const ADMIN_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 const CACHE_OPTS = { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY };
 
@@ -28,18 +28,28 @@ const updateCache = (next: AdminData) => writeCachedValue(ADMIN_CACHE_KEY, next,
 
 export const useAdminData = () => {
   const { accessToken } = useAuth();
-  const cached = readCachedValue<AdminData>(ADMIN_CACHE_KEY, CACHE_OPTS);
-  const [adminData, setAdminData] = useState<AdminData>(cached ?? { tactics: [], quizzes: [], playlists: [] });
-  const [isLoading, setIsLoading] = useState<boolean>(!cached);
+
+  // Show stale data instantly (ignores TTL), then revalidate in background
+  const stale = readCachedValueStale<AdminData>(ADMIN_CACHE_KEY, CACHE_OPTS);
+  const fresh = stale ? null : readCachedValue<AdminData>(ADMIN_CACHE_KEY, CACHE_OPTS);
+  const initial = stale ?? fresh ?? { tactics: [], quizzes: [], playlists: [] };
+
+  const [adminData, setAdminData] = useState<AdminData>(initial);
+  // Show spinner only if there is absolutely no cached data at all
+  const [isLoading, setIsLoading] = useState<boolean>(!stale && !fresh);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        if (!cached) setIsLoading(true);
         setError(null);
-        const fresh = await getOrFetchCached(ADMIN_CACHE_KEY, fetchAdminData, CACHE_OPTS);
-        setAdminData(fresh);
+        // If we showed stale data, fetch fresh silently without spinner
+        const needsSpinner = !stale && !readCachedValue<AdminData>(ADMIN_CACHE_KEY, CACHE_OPTS);
+        if (needsSpinner) setIsLoading(true);
+
+        const freshData = await fetchAdminData();
+        writeCachedValue(ADMIN_CACHE_KEY, freshData, CACHE_OPTS);
+        setAdminData(freshData);
 
         // One-time migration of legacy localStorage data
         const savedRaw = localStorage.getItem(ADMIN_STORAGE_KEY);
@@ -48,7 +58,7 @@ export const useAdminData = () => {
             const saved = JSON.parse(savedRaw) as AdminData;
             if (saved.tactics?.length && accessToken) {
               for (const item of saved.tactics) {
-                const exists = fresh.tactics.some(x => x.title === item.title && x.description === item.description);
+                const exists = freshData.tactics.some(x => x.title === item.title && x.description === item.description);
                 if (!exists) {
                   try { await tacticsCreate({ ...item, id: undefined as any }, accessToken); } catch {}
                 }
@@ -56,7 +66,7 @@ export const useAdminData = () => {
             }
             if (saved.quizzes?.length && accessToken) {
               for (const item of saved.quizzes) {
-                const exists = fresh.quizzes.some(x => x.title === item.title && x.question === item.question);
+                const exists = freshData.quizzes.some(x => x.title === item.title && x.question === item.question);
                 if (!exists) {
                   try { await quizzesCreate({ ...item, id: undefined as any }, accessToken); } catch {}
                 }

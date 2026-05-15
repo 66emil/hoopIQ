@@ -80,7 +80,7 @@ export const TacticsSection = ({ tactics, tacticPlaylists = [], progress, onComp
             <span className="icon-soft">
               <BookOpen size={22} />
             </span>
-            <h1 className="text-display text-4xl">{t('tactics.title')}</h1>
+            <h1 className="text-display text-2xl sm:text-4xl">{t('tactics.title')}</h1>
           </div>
           <p className="muted-2 text-base sm:text-xl max-w-3xl mx-auto">
             {t('tactics.description')}
@@ -144,13 +144,13 @@ export const TacticsSection = ({ tactics, tacticPlaylists = [], progress, onComp
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-[13px] font-semibold muted-2 mb-1.5">Playlists</label>
+              <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('tactics.playlists')}</label>
               <select
                 value={selectedPlaylistId}
                 onChange={e => setSelectedPlaylistId(e.target.value)}
                 className="field"
               >
-                <option value="all">All playlists</option>
+                <option value="all">{t('tactics.allPlaylists')}</option>
                 {playlistOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -14,13 +15,14 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const { t } = useLocalization();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       if (mode === 'register' && !acceptedPrivacy) {
-        setError('Please accept the Privacy Policy');
+        setError(t('auth.accept.required'));
         return;
       }
       if (mode === 'login') {
@@ -51,7 +53,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
           <div className="mx-auto icon-soft lg" style={{ margin: '0 auto' }}>
             <span className="font-bold" style={{ color: 'var(--accent)' }}>@</span>
           </div>
-          <h3 className="font-display text-lg">Verify your email</h3>
+          <h3 className="font-display text-lg">{t('auth.verify.title')}</h3>
           <p className="muted-2">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -68,7 +70,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'register' && (
         <div>
-          <label className="block text-[13px] font-semibold muted-2 mb-1.5">Name</label>
+          <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('auth.name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -78,7 +80,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
         </div>
       )}
       <div>
-        <label className="block text-[13px] font-semibold muted-2 mb-1.5">Email</label>
+        <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('auth.email')}</label>
         <input
           type="email"
           value={email}
@@ -98,15 +100,15 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
             required
           />
           <span>
-            I have read and agree with the{' '}
+            {t('auth.accept.privacy')}{' '}
             <a href="/privacy" target="_blank" style={{ color: 'var(--accent)' }} className="underline">
-              Privacy Policy
+              {t('auth.privacy.link')}
             </a>
           </span>
         </label>
       )}
       <div>
-        <label className="block text-[13px] font-semibold muted-2 mb-1.5">Password</label>
+        <label className="block text-[13px] font-semibold muted-2 mb-1.5">{t('auth.password')}</label>
         <input
           type="password"
           value={password}
@@ -125,7 +127,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
         disabled={submitting || (mode === 'register' && !acceptedPrivacy)}
         className="btn btn-primary w-full"
       >
-        {submitting ? 'Loading...' : mode === 'login' ? 'Login' : 'Register'}
+        {submitting ? t('auth.loading') : t(mode === 'login' ? 'auth.login.button' : 'auth.register.button')}
       </button>
       {onSwitchMode && (
         <button
@@ -133,7 +135,7 @@ export const AuthForm = ({ mode, onLogin, onRegister, onSwitchMode }: AuthFormPr
           className="btn btn-ghost w-full text-sm"
           onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
         >
-          {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
+          {mode === 'login' ? t('auth.no.account') : t('auth.have.account')}
         </button>
       )}
     </form>

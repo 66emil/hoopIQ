@@ -54,7 +54,12 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
   const [activeStep, setActiveStep] = useState(0);
   const [pendingOpen, setPendingOpen] = useState(false);
   const { currentUser, accessToken, isAuthLoading } = useAuth();
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
+
+  const loc = (val: string) => {
+    try { const p = JSON.parse(val); if (p?.en) return p[language] || p.en; } catch {}
+    return val;
+  };
   const navigate = useNavigate();
 
   const isOff = tactic.category === 'offense';
@@ -104,7 +109,7 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
           }}
         >
           {tactic.thumbnail ? (
-            <img src={tactic.thumbnail} alt={tactic.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={tactic.thumbnail} alt={loc(tactic.title)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <>
               <HalfCourt />
@@ -152,8 +157,8 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
 
         {/* Body */}
         <div style={{ padding: '18px 22px 22px' }}>
-          <h3 className="text-display" style={{ fontSize: 20, lineHeight: 1.2 }}>{tactic.title}</h3>
-          <p className="muted-2" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.55 }}>{tactic.description}</p>
+          <h3 className="text-display" style={{ fontSize: 20, lineHeight: 1.2 }}>{loc(tactic.title)}</h3>
+          <p className="muted-2" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.55 }}>{loc(tactic.description)}</p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
             <span className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600 }}>
               <Clock size={14} /> {stepsCount} {t('common.steps')}
@@ -191,7 +196,7 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
                   <div className="muted" style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase' }}>
                     {tactic.category} · {tactic.difficulty}
                   </div>
-                  <h3 className="text-display" style={{ fontSize: 20 }}>{tactic.title}</h3>
+                  <h3 className="text-display" style={{ fontSize: 20 }}>{loc(tactic.title)}</h3>
                 </div>
                 <span style={{ flex: 1 }} />
                 <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}><X size={16} /></button>

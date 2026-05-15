@@ -318,5 +318,16 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ── Mobile / touch ──────────────────────────────────────── */
+* { -webkit-tap-highlight-color: transparent; }
+body { overflow-x: hidden; }
+
+/* Ensure tap targets are at least 44px */
+.btn { min-height: 44px; }
+.btn-sm { min-height: 36px; }
+
+/* Prevent iOS font inflation */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 /* ── Focus ────────────────────────────────────────────────── */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }

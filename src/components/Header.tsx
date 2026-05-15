@@ -24,7 +24,7 @@ export const Header = ({ activeSection, onSectionChange, progress, onLogoClick }
   const tabs: { id: HeaderProps['activeSection']; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
     { id: 'tactics', label: t('header.nav.tactics'), Icon: BookOpen },
     { id: 'quiz',    label: t('header.nav.quiz'),    Icon: Video },
-    ...((isAdmin || isAdminLoading) ? [{ id: 'admin' as const, label: t('header.nav.admin'), Icon: Settings }] : []),
+    ...(isAdmin ? [{ id: 'admin' as const, label: t('header.nav.admin'), Icon: Settings }] : []),
   ];
 
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -55,14 +55,14 @@ export const Header = ({ activeSection, onSectionChange, progress, onLogoClick }
             <HoopLogo size={36} />
             <div className="text-left">
               <div className="font-display text-xl leading-none" style={{ letterSpacing: '-.03em' }}>hoopIQ</div>
-              <div className="muted text-[11px] uppercase tracking-widest mt-1">{t('header.subtitle')}</div>
+              <div className="muted text-[11px] uppercase tracking-widest mt-1 hidden sm:block">{t('header.subtitle')}</div>
             </div>
           </button>
 
           <div className="flex-1" />
 
           {/* Segmented nav */}
-          <nav className="relative inline-flex p-[5px]" style={{ background: 'var(--bg-soft)', borderRadius: 999, boxShadow: '0 0 0 1px var(--line) inset' }}>
+          <nav className="relative inline-flex p-[5px] min-w-0 shrink" style={{ background: 'var(--bg-soft)', borderRadius: 999, boxShadow: '0 0 0 1px var(--line) inset' }}>
             <span
               style={{
                 position: 'absolute', top: 5, bottom: 5,

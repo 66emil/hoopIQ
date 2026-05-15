@@ -1,6 +1,8 @@
-// no React import needed for JSX with react-jsx runtime
+import React from 'react';
+import { useLocalization } from '../hooks/useLocalization';
 
 export const Footer: React.FC = () => {
+  const { t } = useLocalization();
   const logoSrc = '/logo.png'; // place your logo into public/logo.png
 
   return (
@@ -38,19 +40,18 @@ export const Footer: React.FC = () => {
               />
             </div>
             <p className="text-sm leading-6 muted-2 max-w-xl">
-              We build a platform for learning basketball tactics with quizzes: practice,
-              videos, and interactive tasks help you master the game faster.
+              {t('footer.description')}
             </p>
           </div>
 
           {/* Navigation links */}
           <nav className="flex items-center gap-6">
             <a href="/support" className="text-sm muted-2 hover:text-ink">
-              Support
+              {t('footer.support')}
             </a>
             <span className="hidden md:inline" style={{ color: 'var(--line-2)' }}>|</span>
             <a href="/privacy" className="text-sm muted-2 hover:text-ink">
-              Privacy Policy
+              {t('footer.privacy')}
             </a>
           </nav>
         </div>
@@ -58,7 +59,7 @@ export const Footer: React.FC = () => {
         <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Contact */}
           <div className="text-sm muted">
-            <span className="mr-2">✉️ Email:</span>
+            <span className="mr-2">✉️ {t('footer.email')}:</span>
             <a href="mailto:hoopiq.pro@gmail.com" className="muted-2 hover:text-ink">
               hoopiq.pro@gmail.com
             </a>
@@ -103,7 +104,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-8 text-xs muted">
-          © 2025 HoopIQ. All rights reserved.
+          {t('footer.rights')}
         </div>
       </div>
     </footer>

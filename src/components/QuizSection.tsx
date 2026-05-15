@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { QuizCard } from './QuizCard';
 import { Playlist, QuizQuestion } from '../types';
 import { Video } from 'lucide-react';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface QuizSectionProps {
   quizzes: QuizQuestion[];
@@ -19,6 +20,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
   const [activeCategory, setActiveCategory] = useState<'all' | 'offense' | 'defense'>('all');
   const [activeDifficulty, setActiveDifficulty] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
   const [activePlaylistId, setActivePlaylistId] = useState<string>('all');
+  const { t } = useLocalization();
 
   const filteredQuizzes = useMemo(() => {
     let list = quizzes;
@@ -46,50 +48,49 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-4">
           <Video size={32} style={{ color: 'var(--accent)' }} />
-          <h2 className="font-display text-3xl">Reading Combinations</h2>
+          <h2 className="font-display text-3xl">{t('quiz.section.title')}</h2>
         </div>
         <p className="muted-2 mb-4">
-          Analyze game situations and make the right decisions.
-          Correct answer gives +25 XP.
+          {t('quiz.section.desc')}
         </p>
 
-        <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-3 md:space-y-0 mb-4">
+        <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-3 md:space-y-0 mb-4 overflow-x-auto pb-2">
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1">Category</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">{t('tactics.filter.category')}</label>
             <select
               value={activeCategory}
               onChange={e => setActiveCategory(e.target.value as typeof activeCategory)}
               className="field"
-              style={{ width: 'auto' }}
+              style={{ width: 'auto', minWidth: 120 }}
             >
-              <option value="all">All</option>
-              <option value="offense">Offense</option>
-              <option value="defense">Defense</option>
+              <option value="all">{t('quiz.filter.all')}</option>
+              <option value="offense">{t('quiz.filter.offense')}</option>
+              <option value="defense">{t('quiz.filter.defense')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1">Difficulty</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">{t('tactics.filter.difficulty')}</label>
             <select
               value={activeDifficulty}
               onChange={e => setActiveDifficulty(e.target.value as typeof activeDifficulty)}
               className="field"
-              style={{ width: 'auto' }}
+              style={{ width: 'auto', minWidth: 120 }}
             >
-              <option value="all">All</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="all">{t('quiz.filter.all')}</option>
+              <option value="beginner">{t('quiz.filter.beginner')}</option>
+              <option value="intermediate">{t('quiz.filter.intermediate')}</option>
+              <option value="advanced">{t('quiz.filter.advanced')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold muted-2 mb-1">Playlist</label>
+            <label className="block text-[13px] font-semibold muted-2 mb-1">{t('tactics.playlists')}</label>
             <select
               value={activePlaylistId}
               onChange={e => setActivePlaylistId(e.target.value)}
               className="field"
-              style={{ width: 'auto' }}
+              style={{ width: 'auto', minWidth: 120 }}
             >
-              <option value="all">All playlists</option>
+              <option value="all">{t('quiz.filter.allPlaylists')}</option>
               {quizPlaylists.map(playlist => (
                 <option key={playlist.id} value={playlist.id}>
                   {playlist.title} ({playlist.quizIds.length})
@@ -101,7 +102,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
 
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium muted" style={{ color: 'var(--accent)' }}>Quiz progress</span>
+            <span className="text-sm font-medium muted" style={{ color: 'var(--accent)' }}>{t('quiz.progress.label')}</span>
             <span className="text-sm" style={{ color: 'var(--accent)' }}>{completedCount}/{filteredQuizzes.length}</span>
           </div>
           <div className="progress-track">

@@ -20,7 +20,9 @@ interface AdminPanelProps {
 
 interface TacticForm {
   title: string;
+  titleRu: string;
   description: string;
+  descriptionRu: string;
   category: 'offense' | 'defense';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   steps: string[];
@@ -30,7 +32,9 @@ interface TacticForm {
 
 interface QuizForm {
   title: string;
+  titleRu: string;
   question: string;
+  questionRu: string;
   options: string[];
   correctAnswer: number;
   explanation: string;
@@ -54,7 +58,9 @@ interface PlaylistForm {
 
 const EMPTY_TACTIC_FORM: TacticForm = {
   title: '',
+  titleRu: '',
   description: '',
+  descriptionRu: '',
   category: 'offense',
   difficulty: 'beginner',
   steps: [''],
@@ -64,7 +70,9 @@ const EMPTY_TACTIC_FORM: TacticForm = {
 
 const EMPTY_QUIZ_FORM: QuizForm = {
   title: '',
+  titleRu: '',
   question: '',
+  questionRu: '',
   options: ['', '', '', ''],
   correctAnswer: 0,
   explanation: '',
@@ -101,6 +109,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeletePlaylist,
 }) => {
   const [activeTab, setActiveTab] = useState<'tactics' | 'quizzes' | 'playlists'>('tactics');
+  const [tacticLang, setTacticLang] = useState<'en' | 'ru'>('en');
+  const [quizLang, setQuizLang] = useState<'en' | 'ru'>('en');
+
+  const packBilingual = (en: string, ru: string) =>
+    ru.trim() ? JSON.stringify({ en, ru }) : en;
+
+  const unpackBilingual = (value: string): { en: string; ru: string } => {
+    try {
+      const p = JSON.parse(value);
+      if (p?.en !== undefined) return { en: p.en || '', ru: p.ru || '' };
+    } catch {}
+    return { en: value, ru: '' };
+  };
 
   const [tacticForm, setTacticForm] = useState<TacticForm>(EMPTY_TACTIC_FORM);
   const [editingTactic, setEditingTactic] = useState<Tactic | null>(null);
@@ -119,12 +140,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-white mb-4">Admin Panel</h2>
-        <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
+        <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg overflow-x-auto">
           {(['tactics', 'quizzes', 'playlists'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-orange-500 text-white shadow-md'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
@@ -144,15 +165,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {editingTactic ? 'Edit tactic' : 'Add tactic'}
             </h3>
 
+            {/* Language switcher */}
+            <div className="flex space-x-1 bg-gray-700 p-1 rounded-lg mb-4 w-fit">
+              {(['en', 'ru'] as const).map(lang => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setTacticLang(lang)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                    tacticLang === lang ? 'bg-orange-500 text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={tacticForm.title}
-                  onChange={e => setTacticForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
-                />
+                {tacticLang === 'en' ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Title (EN)</label>
+                    <input
+                      type="text"
+                      value={tacticForm.title}
+                      onChange={e => setTacticForm(f => ({ ...f, title: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Title (RU)</label>
+                    <input
+                      type="text"
+                      value={tacticForm.titleRu}
+                      onChange={e => setTacticForm(f => ({ ...f, titleRu: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  </>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
@@ -190,13 +241,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-              <textarea
-                value={tacticForm.description}
-                onChange={e => setTacticForm(f => ({ ...f, description: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
-              />
+              {tacticLang === 'en' ? (
+                <>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Description (EN)</label>
+                  <textarea
+                    value={tacticForm.description}
+                    onChange={e => setTacticForm(f => ({ ...f, description: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Description (RU)</label>
+                  <textarea
+                    value={tacticForm.descriptionRu}
+                    onChange={e => setTacticForm(f => ({ ...f, descriptionRu: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </>
+              )}
             </div>
 
             <div className="mb-4">
@@ -253,7 +318,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <button
                     onClick={() => {
-                      onUpdateTactic?.(editingTactic.id, { ...editingTactic, ...tacticForm });
+                      const { titleRu, descriptionRu, ...rest } = tacticForm;
+                      onUpdateTactic?.(editingTactic.id, {
+                        ...editingTactic,
+                        ...rest,
+                        title: packBilingual(tacticForm.title, titleRu),
+                        description: packBilingual(tacticForm.description, descriptionRu),
+                      });
                       cancelTactic();
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
@@ -266,7 +337,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </>
               ) : (
                 <button
-                  onClick={() => { onAddTactic?.(tacticForm); setTacticForm(EMPTY_TACTIC_FORM); }}
+                  onClick={() => {
+                    const { titleRu, descriptionRu, ...rest } = tacticForm;
+                    onAddTactic?.({
+                      ...rest,
+                      title: packBilingual(tacticForm.title, titleRu),
+                      description: packBilingual(tacticForm.description, descriptionRu),
+                    });
+                    setTacticForm(EMPTY_TACTIC_FORM);
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
                 >
                   <Plus className="h-4 w-4" /><span>Add tactic</span>
@@ -296,9 +375,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <button
                       onClick={() => {
                         setEditingTactic(tactic);
+                        const unpackedTitle = unpackBilingual(tactic.title);
+                        const unpackedDesc = unpackBilingual(tactic.description);
                         setTacticForm({
-                          title: tactic.title,
-                          description: tactic.description,
+                          title: unpackedTitle.en,
+                          titleRu: unpackedTitle.ru,
+                          description: unpackedDesc.en,
+                          descriptionRu: unpackedDesc.ru,
                           category: tactic.category,
                           difficulty: tactic.difficulty,
                           steps: tactic.steps,
@@ -329,15 +412,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {editingQuiz ? 'Edit quiz' : 'Add quiz'}
             </h3>
 
+            {/* Language switcher */}
+            <div className="flex space-x-1 bg-gray-700 p-1 rounded-lg mb-4 w-fit">
+              {(['en', 'ru'] as const).map(lang => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setQuizLang(lang)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                    quizLang === lang ? 'bg-orange-500 text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={quizForm.title}
-                  onChange={e => setQuizForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
-                />
+                {quizLang === 'en' ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Title (EN)</label>
+                    <input
+                      type="text"
+                      value={quizForm.title}
+                      onChange={e => setQuizForm(f => ({ ...f, title: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Title (RU)</label>
+                    <input
+                      type="text"
+                      value={quizForm.titleRu}
+                      onChange={e => setQuizForm(f => ({ ...f, titleRu: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  </>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
@@ -375,13 +488,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Question</label>
-              <textarea
-                value={quizForm.question}
-                onChange={e => setQuizForm(f => ({ ...f, question: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
-              />
+              {quizLang === 'en' ? (
+                <>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Question (EN)</label>
+                  <textarea
+                    value={quizForm.question}
+                    onChange={e => setQuizForm(f => ({ ...f, question: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Question (RU)</label>
+                  <textarea
+                    value={quizForm.questionRu}
+                    onChange={e => setQuizForm(f => ({ ...f, questionRu: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </>
+              )}
             </div>
 
             <div className="mb-4">
@@ -464,7 +591,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <>
                   <button
                     onClick={() => {
-                      onUpdateQuiz?.(editingQuiz.id, { ...editingQuiz, ...quizForm });
+                      const { titleRu, questionRu, ...rest } = quizForm;
+                      onUpdateQuiz?.(editingQuiz.id, {
+                        ...editingQuiz,
+                        ...rest,
+                        title: packBilingual(quizForm.title, titleRu),
+                        question: packBilingual(quizForm.question, questionRu),
+                      });
                       cancelQuiz();
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
@@ -477,7 +610,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </>
               ) : (
                 <button
-                  onClick={() => { onAddQuiz?.(quizForm); setQuizForm(EMPTY_QUIZ_FORM); }}
+                  onClick={() => {
+                    const { titleRu, questionRu, ...rest } = quizForm;
+                    onAddQuiz?.({
+                      ...rest,
+                      title: packBilingual(quizForm.title, titleRu),
+                      question: packBilingual(quizForm.question, questionRu),
+                    });
+                    setQuizForm(EMPTY_QUIZ_FORM);
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
                 >
                   <Plus className="h-4 w-4" /><span>Add quiz</span>
@@ -507,9 +648,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <button
                       onClick={() => {
                         setEditingQuiz(quiz);
+                        const unpackedTitle = unpackBilingual(quiz.title);
+                        const unpackedQuestion = unpackBilingual(quiz.question);
                         setQuizForm({
-                          title: quiz.title,
-                          question: quiz.question,
+                          title: unpackedTitle.en,
+                          titleRu: unpackedTitle.ru,
+                          question: unpackedQuestion.en,
+                          questionRu: unpackedQuestion.ru,
                           options: quiz.options,
                           correctAnswer: quiz.correctAnswer,
                           explanation: quiz.explanation,

@@ -71,10 +71,7 @@ const en: Record<string, string> = {
   'quiz.progress.completed': 'Completed',
   'quiz.progress.total': 'Total',
   'quiz.start': 'Start Quiz',
-  'quiz.submit': 'Submit Answer',
   'quiz.reset': 'Try Again',
-  'quiz.correct': 'Correct!',
-  'quiz.incorrect': 'Incorrect!',
   'quiz.score': 'Score',
   'quiz.result': 'Result',
 
@@ -174,6 +171,76 @@ const en: Record<string, string> = {
   'language.en': 'English',
   'language.ru': 'Russian',
   'language.switch': 'Switch language',
+
+  // Footer
+  'footer.description': 'We build a platform for learning basketball tactics with quizzes: practice, videos, and interactive tasks help you master the game faster.',
+  'footer.support': 'Support',
+  'footer.privacy': 'Privacy Policy',
+  'footer.rights': '© 2025 HoopIQ. All rights reserved.',
+  'footer.email': 'Email',
+
+  // Auth extras
+  'auth.verify.title': 'Verify your email',
+  'auth.accept.privacy': 'I have read and agree with the',
+  'auth.privacy.link': 'Privacy Policy',
+  'auth.loading': 'Loading...',
+  'auth.no.account': "Don't have an account? Register",
+  'auth.have.account': 'Already have an account? Login',
+  'auth.accept.required': 'Please accept the Privacy Policy',
+
+  // Quiz section / card
+  'quiz.section.title': 'Reading Combinations',
+  'quiz.section.desc': 'Analyze game situations and make the right decisions. Correct answer gives +25 XP.',
+  'quiz.filter.all': 'All',
+  'quiz.filter.offense': 'Offense',
+  'quiz.filter.defense': 'Defense',
+  'quiz.filter.beginner': 'Beginner',
+  'quiz.filter.intermediate': 'Intermediate',
+  'quiz.filter.advanced': 'Advanced',
+  'quiz.filter.allPlaylists': 'All playlists',
+  'quiz.progress.label': 'Quiz progress',
+  'quiz.question.label': 'Question:',
+  'quiz.options.label': 'Options:',
+  'quiz.explanation.label': 'Explanation',
+  'quiz.submit': 'Submit answer',
+  'quiz.tryAgain': 'Try again',
+  'quiz.close': 'Close',
+  'quiz.points': '+25 points',
+  'quiz.correct': 'Correct!',
+  'quiz.incorrect': 'Incorrect',
+  'quiz.startQuiz': 'Start quiz',
+
+  // Tactics extras
+  'tactics.playlists': 'Playlists',
+  'tactics.allPlaylists': 'All playlists',
+
+  // Profile extras
+  'profile.heading': 'My profile',
+  'profile.loading': 'Loading profile…',
+  'profile.loginHeading': 'Login / Registration',
+  'profile.nickname': 'Nickname',
+  'profile.bio': 'Bio',
+  'profile.position': 'Position',
+  'profile.position.pg': 'Point Guard',
+  'profile.position.sg': 'Shooting Guard',
+  'profile.position.sf': 'Small Forward',
+  'profile.position.pf': 'Power Forward',
+  'profile.position.c': 'Center',
+  'profile.position.select': 'Select position',
+  'profile.avatar.click': 'Click to upload',
+  'profile.save': 'Save changes',
+  'profile.logout': 'Logout',
+  'profile.level': 'Level',
+  'profile.xp': 'XP',
+  'profile.done': 'Done',
+
+  // Support
+  'support.heading': 'Support',
+  'support.desc': 'Write to us in any social network. We are happy to hear your questions and suggestions.',
+  'support.email': 'Or email us at',
+
+  // Privacy
+  'privacy.heading': 'Privacy Policy',
 };
 
 const ru: Record<string, string> = {
@@ -247,10 +314,7 @@ const ru: Record<string, string> = {
   'quiz.progress.completed': 'Завершено',
   'quiz.progress.total': 'Всего',
   'quiz.start': 'Начать квиз',
-  'quiz.submit': 'Отправить ответ',
   'quiz.reset': 'Попробовать снова',
-  'quiz.correct': 'Правильно!',
-  'quiz.incorrect': 'Неправильно!',
   'quiz.score': 'Очки',
   'quiz.result': 'Результат',
 
@@ -350,6 +414,76 @@ const ru: Record<string, string> = {
   'language.en': 'English',
   'language.ru': 'Русский',
   'language.switch': 'Сменить язык',
+
+  // Футер
+  'footer.description': 'Мы создаём платформу для изучения баскетбольных тактик с квизами: практика, видео и интерактивные задания помогают освоить игру быстрее.',
+  'footer.support': 'Поддержка',
+  'footer.privacy': 'Политика конфиденциальности',
+  'footer.rights': '© 2025 HoopIQ. Все права защищены.',
+  'footer.email': 'Email',
+
+  // Авторизация (дополнительно)
+  'auth.verify.title': 'Подтвердите email',
+  'auth.accept.privacy': 'Я прочитал и согласен с',
+  'auth.privacy.link': 'Политикой конфиденциальности',
+  'auth.loading': 'Загрузка...',
+  'auth.no.account': 'Нет аккаунта? Зарегистрироваться',
+  'auth.have.account': 'Уже есть аккаунт? Войти',
+  'auth.accept.required': 'Пожалуйста, примите Политику конфиденциальности',
+
+  // Секция квизов / карточка
+  'quiz.section.title': 'Чтение комбинаций',
+  'quiz.section.desc': 'Анализируй игровые ситуации и принимай правильные решения. Правильный ответ даёт +25 XP.',
+  'quiz.filter.all': 'Все',
+  'quiz.filter.offense': 'Атака',
+  'quiz.filter.defense': 'Защита',
+  'quiz.filter.beginner': 'Начинающий',
+  'quiz.filter.intermediate': 'Средний',
+  'quiz.filter.advanced': 'Продвинутый',
+  'quiz.filter.allPlaylists': 'Все плейлисты',
+  'quiz.progress.label': 'Прогресс квизов',
+  'quiz.question.label': 'Вопрос:',
+  'quiz.options.label': 'Варианты:',
+  'quiz.explanation.label': 'Пояснение',
+  'quiz.submit': 'Отправить ответ',
+  'quiz.tryAgain': 'Попробовать снова',
+  'quiz.close': 'Закрыть',
+  'quiz.points': '+25 очков',
+  'quiz.correct': 'Правильно!',
+  'quiz.incorrect': 'Неправильно',
+  'quiz.startQuiz': 'Начать квиз',
+
+  // Тактики (дополнительно)
+  'tactics.playlists': 'Плейлисты',
+  'tactics.allPlaylists': 'Все плейлисты',
+
+  // Профиль (дополнительно)
+  'profile.heading': 'Мой профиль',
+  'profile.loading': 'Загрузка профиля…',
+  'profile.loginHeading': 'Вход / Регистрация',
+  'profile.nickname': 'Никнейм',
+  'profile.bio': 'О себе',
+  'profile.position': 'Позиция',
+  'profile.position.pg': 'Разыгрывающий',
+  'profile.position.sg': 'Атакующий защитник',
+  'profile.position.sf': 'Лёгкий форвард',
+  'profile.position.pf': 'Тяжёлый форвард',
+  'profile.position.c': 'Центровой',
+  'profile.position.select': 'Выбрать позицию',
+  'profile.avatar.click': 'Нажми для загрузки',
+  'profile.save': 'Сохранить изменения',
+  'profile.logout': 'Выйти',
+  'profile.level': 'Уровень',
+  'profile.xp': 'XP',
+  'profile.done': 'Готово',
+
+  // Поддержка
+  'support.heading': 'Поддержка',
+  'support.desc': 'Напишите нам в любую социальную сеть. Мы рады ответить на вопросы и предложения.',
+  'support.email': 'Или напишите нам на',
+
+  // Политика
+  'privacy.heading': 'Политика конфиденциальности',
 };
 
 export const STRINGS: Record<Lang, Record<string, string>> = { en, ru };

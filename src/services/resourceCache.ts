@@ -40,7 +40,22 @@ export function readCachedValue<T>(key: string, opts: CacheOptions = {}): T | nu
   if (opts.storageKey) {
     const rec = safeParseJson<CacheRecord<T>>(localStorage.getItem(opts.storageKey));
     if (rec && rec.storedAt + ttlMs > Date.now()) {
-      // hydrate memory for fast next read
+      memory.set(key, { value: rec.value, storedAt: rec.storedAt });
+      return rec.value;
+    }
+  }
+
+  return null;
+}
+
+/** Read cached value ignoring TTL — returns stale data if present */
+export function readCachedValueStale<T>(key: string, opts: CacheOptions = {}): T | null {
+  const m = memory.get(key) as MemoryEntry<T> | undefined;
+  if (m?.value !== undefined) return m.value;
+
+  if (opts.storageKey) {
+    const rec = safeParseJson<CacheRecord<T>>(localStorage.getItem(opts.storageKey));
+    if (rec) {
       memory.set(key, { value: rec.value, storedAt: rec.storedAt });
       return rec.value;
     }

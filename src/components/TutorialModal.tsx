@@ -255,7 +255,7 @@ export const TutorialModal = ({ isOpen, onClose, onComplete }: TutorialModalProp
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 flex items-center justify-center z-50 p-3 sm:p-4"
       style={{ background: 'color-mix(in oklab, var(--ink) 30%, transparent)', backdropFilter: 'blur(8px)' }}
     >
       <div className="card w-full" style={{ borderRadius: 'var(--r-xl)', maxWidth: 672 }}>
@@ -309,7 +309,7 @@ export const TutorialModal = ({ isOpen, onClose, onComplete }: TutorialModalProp
             <span>{t('tutorial.back')}</span>
           </button>
 
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap space-x-2 justify-center">
             {tutorialSteps.map((_, index) => (
               <button
                 key={index}

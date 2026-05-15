@@ -1,9 +1,11 @@
-// no React import needed for JSX with react-jsx runtime
+import React from 'react';
+import { useLocalization } from '../hooks/useLocalization';
 
 export const PrivacyPolicy = () => {
+  const { t } = useLocalization();
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('privacy.heading')}</h1>
       <p className="muted-2 mb-4">Last updated: 2025-09-22</p>
 
       <div className="space-y-6 muted-2">

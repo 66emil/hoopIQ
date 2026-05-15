@@ -4,6 +4,7 @@ import { QuizQuestion } from '../types';
 import { VideoPlayer } from './VideoPlayer';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../hooks/useAuth';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface QuizCardProps {
   quiz: QuizQuestion;
@@ -23,6 +24,12 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
   const [showResult, setShowResult] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { currentUser, isAuthLoading } = useAuth();
+  const { t, language } = useLocalization();
+
+  const loc = (val: string) => {
+    try { const p = JSON.parse(val); if (p?.en) return p[language] || p.en; } catch {}
+    return val;
+  };
 
   const handleAnswerSelect = (index: number) => {
     if (!showResult) setSelectedAnswer(index);
@@ -56,7 +63,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
     return (
       <div className="fixed inset-0 z-50 flex flex-col pt-safe pb-safe" style={{ background: 'var(--bg)' }}>
         <div className="p-3 sm:p-4 flex items-center justify-between" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--line)' }}>
-          <h2 className="font-display text-xl">{quiz.title}</h2>
+          <h2 className="font-display text-xl">{loc(quiz.title)}</h2>
           <button onClick={() => setShowQuiz(false)} className="btn btn-ghost btn-sm">
             <X size={20} />
           </button>
@@ -73,17 +80,17 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
             </div>
           </div>
 
-          <div className="w-full md:w-96 p-4 md:p-6 overflow-y-auto modal-scroll" style={{ background: 'var(--bg-elev)', borderLeft: '1px solid var(--line)' }}>
+          <div className="w-full md:w-96 p-4 md:p-6 overflow-y-auto modal-scroll max-h-[50vh] md:max-h-none" style={{ background: 'var(--bg-elev)', borderLeft: '1px solid var(--line)' }}>
             <div className="space-y-4">
               <div>
-                <h3 className="font-display text-lg mb-2">Question:</h3>
-                <p className="muted-2">{quiz.question}</p>
+                <h3 className="font-display text-lg mb-2">{t('quiz.question.label')}</h3>
+                <p className="muted-2">{loc(quiz.question)}</p>
               </div>
 
               {!showResult ? (
                 <>
                   <div className="space-y-3">
-                    <h4 className="font-semibold">Options:</h4>
+                    <h4 className="font-semibold">{t('quiz.options.label')}</h4>
                     {quiz.options.map((option, index) => (
                       <button
                         key={index}
@@ -105,7 +112,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                     disabled={selectedAnswer === null}
                     className="btn btn-primary w-full"
                   >
-                    Submit answer
+                    {t('quiz.submit')}
                   </button>
                 </>
               ) : (
@@ -122,24 +129,24 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
                         ? <Award size={20} style={{ color: 'var(--sage)' }} />
                         : <XCircle size={20} style={{ color: 'var(--brick)' }} />}
                       <span className="font-semibold" style={{ color: selectedAnswer === quiz.correctAnswer ? 'var(--sage)' : 'var(--brick)' }}>
-                        {selectedAnswer === quiz.correctAnswer ? 'Correct!' : 'Incorrect'}
+                        {selectedAnswer === quiz.correctAnswer ? t('quiz.correct') : t('quiz.incorrect')}
                       </span>
                     </div>
                   </div>
 
                   {quiz.explanation && (
                     <div style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: 16 }}>
-                      <p className="text-sm font-medium mb-1">Explanation</p>
+                      <p className="text-sm font-medium mb-1">{t('quiz.explanation.label')}</p>
                       <p className="muted-2 whitespace-pre-line">{quiz.explanation}</p>
                     </div>
                   )}
 
                   <div className="flex space-x-2">
                     <button onClick={resetQuiz} className="btn btn-secondary flex-1">
-                      Try again
+                      {t('quiz.tryAgain')}
                     </button>
                     <button onClick={() => setShowQuiz(false)} className="btn btn-primary flex-1">
-                      {selectedAnswer === quiz.correctAnswer ? '+25 points' : 'Close'}
+                      {selectedAnswer === quiz.correctAnswer ? t('quiz.points') : t('quiz.close')}
                     </button>
                   </div>
                 </div>
@@ -158,10 +165,10 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                <h3 className="font-display text-xl">{quiz.title}</h3>
+                <h3 className="font-display text-xl">{loc(quiz.title)}</h3>
                 {isCompleted && <CheckCircle size={20} style={{ color: 'var(--sage)' }} />}
               </div>
-              <p className="muted-2 mb-3">{quiz.question}</p>
+              <p className="muted-2 mb-3">{loc(quiz.question)}</p>
               <div className="flex space-x-2">
                 <span className={`chip ${difficultyChipMap[quiz.difficulty] ?? ''}`}>
                   {quiz.difficulty}
@@ -188,7 +195,7 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
             className="btn btn-primary w-full"
           >
             <Play size={18} />
-            <span>Start quiz</span>
+            <span>{t('quiz.startQuiz')}</span>
           </button>
         </div>
       </div>
