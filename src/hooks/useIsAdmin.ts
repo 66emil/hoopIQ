@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { isUserAdmin } from '../services/supabaseAdmins';
 
 const CACHE_KEY = 'basketball-iq-admins';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 type AdminCache = {
   byUserId: Record<string, boolean>;
@@ -31,7 +32,6 @@ export function useIsAdmin() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // если не Supabase — выключаем фичу, админов нет
     if (!isSupabaseEnabled()) { setIsAdmin(false); setIsLoading(false); return; }
     if (isAuthLoading) { setIsLoading(true); return; }
     if (!currentUser?.id) { setIsAdmin(false); setIsLoading(false); return; }
@@ -39,7 +39,9 @@ export function useIsAdmin() {
     let isMounted = true;
     const cache = readCache();
     const cached = cache.byUserId[currentUser.id];
-    if (typeof cached === 'boolean') {
+    const isCacheValid = typeof cached === 'boolean' && Date.now() - cache.updatedAt < CACHE_TTL_MS;
+
+    if (isCacheValid) {
       setIsAdmin(cached);
       setIsLoading(false);
     } else {
@@ -51,11 +53,10 @@ export function useIsAdmin() {
         const ok = await isUserAdmin(currentUser.id);
         if (!isMounted) return;
         setIsAdmin(ok);
-        const next: AdminCache = {
+        writeCache({
           byUserId: { ...readCache().byUserId, [currentUser.id]: ok },
-          updatedAt: Date.now()
-        };
-        writeCache(next);
+          updatedAt: Date.now(),
+        });
       } catch {
         if (!isMounted) return;
         setIsAdmin(false);
@@ -70,5 +71,3 @@ export function useIsAdmin() {
 
   return { isAdmin, isAdminLoading: isLoading };
 }
-
-

@@ -1,10 +1,12 @@
-// no React import needed for JSX with react-jsx runtime
-import { Trophy, User, BookOpen, Video, Settings } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useLocalization } from '../hooks/useLocalization';
 import { getLevelInfo, getProgressWithinLevel } from '../services/levels';
 import { UserProgress } from '../types';
+import { BookOpen, Video, Settings, User } from 'lucide-react';
+import { HoopLogo, badgeForLevel } from './icons/Badges';
+import { ThemeToggle } from './ui/ThemeToggle';
 
 interface HeaderProps {
   activeSection: 'tactics' | 'quiz' | 'admin' | 'profile';
@@ -16,101 +18,107 @@ export const Header = ({ activeSection, onSectionChange, progress }: HeaderProps
   const { currentUser, isAuthLoading } = useAuth();
   const { isAdmin, isAdminLoading } = useIsAdmin();
   const { t } = useLocalization();
+  const lvl = getLevelInfo(progress.totalScore);
+  const prog = getProgressWithinLevel(progress.totalScore);
+  const LvlBadge = badgeForLevel(lvl.name);
+
+  const tabs: { id: HeaderProps['activeSection']; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+    { id: 'tactics', label: t('header.nav.tactics'), Icon: BookOpen },
+    { id: 'quiz',    label: t('header.nav.quiz'),    Icon: Video },
+    ...((isAdmin || isAdminLoading) ? [{ id: 'admin' as const, label: t('header.nav.admin'), Icon: Settings }] : []),
+  ];
+
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [thumb, setThumb] = useState({ left: 0, width: 0 });
+  useEffect(() => {
+    const el = tabRefs.current[activeSection];
+    if (el) setThumb({ left: el.offsetLeft, width: el.offsetWidth });
+  }, [activeSection, tabs.length]);
 
   return (
-    <header className="bg-gray-900 shadow-2xl border-b-4 border-orange-500 sticky top-0 z-40 pt-safe">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3">
-          <div className="flex items-center space-x-3">
-            <div className="bg-orange-500 p-2 rounded-lg shrink-0">
-              <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+    <header
+      className="sticky top-0 z-40 pt-safe"
+      style={{
+        background: 'color-mix(in oklab, var(--bg) 86%, transparent)',
+        backdropFilter: 'saturate(160%) blur(14px)',
+        borderBottom: '1px solid var(--line)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 py-3">
+          <button onClick={() => onSectionChange('tactics')} className="flex items-center gap-3" style={{ padding: '4px 6px', borderRadius: 14 }}>
+            <HoopLogo size={36} />
+            <div className="text-left">
+              <div className="font-display text-xl leading-none" style={{ letterSpacing: '-.03em' }}>hoopIQ</div>
+              <div className="muted text-[11px] uppercase tracking-widest mt-1">{t('header.subtitle')}</div>
             </div>
-            <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-white">{t('header.title')}</h1>
-              <p className="text-xs sm:text-sm text-gray-300">{t('header.subtitle')}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="flex space-x-1 overflow-x-auto no-scrollbar max-w-[60vw] sm:max-w-none pr-1">
+          </button>
+
+          <div className="flex-1" />
+
+          {/* Segmented nav */}
+          <nav className="relative inline-flex p-[5px]" style={{ background: 'var(--bg-soft)', borderRadius: 999, boxShadow: '0 0 0 1px var(--line) inset' }}>
+            <span
+              style={{
+                position: 'absolute', top: 5, bottom: 5,
+                left: thumb.left, width: thumb.width,
+                background: 'var(--bg-card)',
+                borderRadius: 999,
+                boxShadow: 'var(--shadow-1), 0 0 0 1px var(--line)',
+                transition: 'left .35s cubic-bezier(.22,1,.36,1), width .35s cubic-bezier(.22,1,.36,1)',
+                zIndex: 1,
+              }}
+            />
+            {tabs.map(({ id, label, Icon }) => (
               <button
-                onClick={() => onSectionChange('tactics')}
-                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                  activeSection === 'tactics'
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                }`}
+                key={id}
+                ref={el => (tabRefs.current[id] = el)}
+                onClick={() => onSectionChange(id)}
+                className="relative z-[2] inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+                style={{ color: activeSection === id ? 'var(--ink)' : 'var(--ink-3)', borderRadius: 999 }}
               >
-                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:block">{t('header.nav.tactics')}</span>
+                <Icon size={16} />
+                <span className="hidden sm:inline">{label}</span>
               </button>
-              <button
-                onClick={() => onSectionChange('quiz')}
-                className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                  activeSection === 'quiz'
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                }`}
-              >
-                <Video className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:block">{t('header.nav.quiz')}</span>
-              </button>
-              {(isAdmin || isAdminLoading) && (
-                <button
-                  onClick={() => onSectionChange('admin')}
-                  className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                    activeSection === 'admin'
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  } ${isAdminLoading && !isAdmin ? 'opacity-50 cursor-wait' : ''}`}
-                  disabled={isAdminLoading && !isAdmin}
-                >
-                  <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden sm:block">{t('header.nav.admin')}</span>
-                </button>
-              )}
+            ))}
+          </nav>
+
+          <ThemeToggle />
+
+          <button
+            onClick={() => onSectionChange('profile')}
+            className="flex items-center gap-3"
+            style={{
+              padding: '6px 14px 6px 6px',
+              borderRadius: 999,
+              background: 'var(--bg-card)',
+              boxShadow: '0 0 0 1px var(--line) inset, var(--shadow-1)',
+            }}
+          >
+            <span className="icon-soft" style={{ width: 32, height: 32, borderRadius: 999 }}>
+              <User size={16} />
+            </span>
+            <div className="text-left leading-tight">
+              <div className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>
+                {isAuthLoading ? '…' : currentUser?.name || t('header.guest')}
+              </div>
+              <div className="muted text-[11px] inline-flex items-center gap-1">
+                <LvlBadge size={12} />
+                <span>{lvl.name}</span>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <button onClick={() => onSectionChange('profile')} className="flex items-center space-x-2 sm:space-x-3 bg-gray-800 px-3 sm:px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition-colors">
-                <User className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />
-                {(() => {
-                  const info = getLevelInfo(progress.totalScore);
-                  return (
-                    <div className="text-xs sm:text-sm text-left">
-                      <div className="font-semibold text-white truncate max-w-[36vw] sm:max-w-none">
-                        {isAuthLoading ? '…' : (currentUser ? currentUser.name : t('header.guest'))}
-                      </div>
-                      <div className="text-orange-300 inline-flex items-center space-x-1">
-                        <span>{info.badge}</span>
-                        <span>{info.name}</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </button>
-            </div>
-          </div>
+          </button>
         </div>
-        
-        <div className="pb-2">
-          {(() => {
-            const prog = getProgressWithinLevel(progress.totalScore);
-            return (
-              <>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${prog.total ? prog.percent : 100}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>{t('header.progress.text')}</span>
-                  <span>{prog.total ? `${prog.current}/${prog.total}` : 'MAX'}</span>
-                </div>
-              </>
-            );
-          })()}
+
+        {/* Progress */}
+        <div className="pb-2 flex items-center gap-3">
+          <span className="muted text-[11px] uppercase tracking-widest font-semibold" style={{ minWidth: 78 }}>{t('header.progress.text')}</span>
+          <div className="flex-1 progress-track">
+            <div className="progress-bar" style={{ width: `${prog.total ? prog.percent : 100}%` }} />
+          </div>
+          <span className="tabular text-[12px] font-semibold muted-2 text-right" style={{ minWidth: 60 }}>
+            {prog.total ? `${prog.current}/${prog.total}` : 'MAX'}
+          </span>
         </div>
       </div>
     </header>

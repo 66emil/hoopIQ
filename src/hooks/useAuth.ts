@@ -1,49 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '../types';
 import { apiLogin, apiMe, apiRegister } from '../services/api';
 import { getSupabaseClient, isSupabaseEnabled } from '../services/supabaseClient';
 import { supabaseGetMe, supabaseLogin, supabaseRegister } from '../services/supabaseAuth';
 
-const AUTH_USERS_KEY = 'basketball-iq-users'; // legacy local users (fallback)
-const AUTH_SESSION_KEY = 'basketball-iq-session'; // stores accessToken now
+const AUTH_SESSION_KEY = 'basketball-iq-session';
 
 type PublicUser = Omit<User, 'passwordHash'>;
 
-const encode = (s: string): string => {
-  try { return btoa(s); } catch { return s; }
-};
-
-const nowIso = () => new Date().toISOString();
-
 export const useAuth = () => {
-  const [users, setUsers] = useState<User[]>(() => {
-    const raw = localStorage.getItem(AUTH_USERS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  });
   const [accessToken, setAccessToken] = useState<string | null>(() => localStorage.getItem(AUTH_SESSION_KEY));
-
-  useEffect(() => {
-    localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
-  }, [users]);
 
   useEffect(() => {
     if (accessToken) localStorage.setItem(AUTH_SESSION_KEY, accessToken);
     else localStorage.removeItem(AUTH_SESSION_KEY);
-    // notify other hook instances
     try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch {}
   }, [accessToken]);
 
-  // subscribe to token changes across tabs/components
+  // Sync token across tabs and other hook instances
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === AUTH_SESSION_KEY) {
-        setAccessToken(e.newValue);
-      }
+      if (e.key === AUTH_SESSION_KEY) setAccessToken(e.newValue);
     };
-    const onCustom = () => {
-      const token = localStorage.getItem(AUTH_SESSION_KEY);
-      setAccessToken(token);
-    };
+    const onCustom = () => setAccessToken(localStorage.getItem(AUTH_SESSION_KEY));
     window.addEventListener('storage', onStorage);
     window.addEventListener('auth:changed', onCustom as EventListener);
     return () => {
@@ -63,7 +42,7 @@ export const useAuth = () => {
       if (!accessToken) { setCurrentUser(null); setIsAuthLoading(false); return; }
       try {
         const me = await apiMe(accessToken);
-        setCurrentUser({ ...me } as PublicUser);
+        setCurrentUser(me as PublicUser);
       } catch {
         setCurrentUser(null);
         setAccessToken(null);
@@ -88,7 +67,7 @@ export const useAuth = () => {
         setAccessToken(token);
         try {
           const me = await supabaseGetMe(token);
-          setCurrentUser({ ...me } as PublicUser);
+          setCurrentUser(me as PublicUser);
         } catch {
           setCurrentUser(null);
         }
@@ -105,7 +84,7 @@ export const useAuth = () => {
         setAccessToken(token);
         try {
           const me = await supabaseGetMe(token);
-          setCurrentUser({ ...me } as PublicUser);
+          setCurrentUser(me as PublicUser);
         } catch {
           setCurrentUser(null);
         }
@@ -123,11 +102,10 @@ export const useAuth = () => {
 
   const register = async (email: string, password: string, name: string): Promise<{ ok: true } | { ok: false; error: string }> => {
     try {
-      const useSupabase = isSupabaseEnabled();
-      const { accessToken } = useSupabase
+      const { accessToken: token } = isSupabaseEnabled()
         ? await supabaseRegister(name, email, password)
         : await apiRegister(name, email, password);
-      setAccessToken(accessToken);
+      setAccessToken(token);
       return { ok: true };
     } catch (e: any) {
       return { ok: false, error: e?.message || 'Ошибка регистрации' };
@@ -136,11 +114,10 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string): Promise<{ ok: true } | { ok: false; error: string }> => {
     try {
-      const useSupabase = isSupabaseEnabled();
-      const { accessToken } = useSupabase
+      const { accessToken: token } = isSupabaseEnabled()
         ? await supabaseLogin(email, password)
         : await apiLogin(email, password);
-      setAccessToken(accessToken);
+      setAccessToken(token);
       return { ok: true };
     } catch (e: any) {
       return { ok: false, error: e?.message || 'Неверный логин или пароль' };
@@ -148,8 +125,7 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    const useSupabase = isSupabaseEnabled();
-    if (useSupabase) {
+    if (isSupabaseEnabled()) {
       try { getSupabaseClient().auth.signOut(); } catch {}
     }
     setAccessToken(null);
@@ -168,8 +144,6 @@ export const useAuth = () => {
     register,
     login,
     logout,
-    updateProfile
+    updateProfile,
   };
 };
-
-

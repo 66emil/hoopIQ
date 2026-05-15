@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Tactic, QuizQuestion, AdminData, Playlist } from '../types';
 import { useAuth } from './useAuth';
 import { isSupabaseEnabled } from '../services/supabaseClient';
@@ -7,80 +7,65 @@ import { listQuizzesFromSupabase, createQuizInSupabase, updateQuizInSupabase, de
 import { listPlaylistsFromSupabase, createPlaylistInSupabase, updatePlaylistInSupabase, deletePlaylistInSupabase } from '../services/supabasePlaylists';
 import { tacticsList, tacticsCreate, tacticsUpdate, tacticsDelete, quizzesList, quizzesCreate, quizzesUpdate, quizzesDelete, playlistsList, playlistsCreate, playlistsUpdate, playlistsDelete } from '../services/api';
 import { getOrFetchCached, readCachedValue, writeCachedValue } from '../services/resourceCache';
-// import { tactics as initialTactics } from '../data/tactics';
-// import { quizzes as initialQuizzes } from '../data/quizzes';
-// import { playlists as initialPlaylists } from '../data/playlists';
+
+const USE_SUPABASE = isSupabaseEnabled();
 
 const ADMIN_STORAGE_KEY = 'basketball-iq-admin-data';
 const ADMIN_CACHE_KEY = 'adminData:v1';
 const ADMIN_CACHE_STORAGE_KEY = 'basketball-iq-admin-cache-v1';
 const ADMIN_CACHE_TTL_MS = 10 * 60 * 1000;
 
+const CACHE_OPTS = { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY };
+
 async function fetchAdminData(): Promise<AdminData> {
-  const useSupabase = isSupabaseEnabled();
-  const [tactics, quizzes, playlists] = useSupabase
-    ? await Promise.all([
-        listTacticsFromSupabase(),
-        listQuizzesFromSupabase(),
-        listPlaylistsFromSupabase()
-      ])
-    : await Promise.all([
-        tacticsList(),
-        quizzesList(),
-        playlistsList()
-      ]);
+  const [tactics, quizzes, playlists] = USE_SUPABASE
+    ? await Promise.all([listTacticsFromSupabase(), listQuizzesFromSupabase(), listPlaylistsFromSupabase()])
+    : await Promise.all([tacticsList(), quizzesList(), playlistsList()]);
   return { tactics, quizzes, playlists };
 }
 
+const updateCache = (next: AdminData) => writeCachedValue(ADMIN_CACHE_KEY, next, CACHE_OPTS);
+
 export const useAdminData = () => {
   const { accessToken } = useAuth();
-  const cached = useMemo(() => {
-    return readCachedValue<AdminData>(ADMIN_CACHE_KEY, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-  }, []);
+  const cached = readCachedValue<AdminData>(ADMIN_CACHE_KEY, CACHE_OPTS);
   const [adminData, setAdminData] = useState<AdminData>(cached ?? { tactics: [], quizzes: [], playlists: [] });
-  const [isLoading, setIsLoading] = useState<boolean>(() => !cached);
+  const [isLoading, setIsLoading] = useState<boolean>(!cached);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка данных с сервера
   useEffect(() => {
     (async () => {
       try {
-        // Если кэш уже есть — не показываем пустой экран, а обновляем в фоне.
         if (!cached) setIsLoading(true);
         setError(null);
-        const fresh = await getOrFetchCached(ADMIN_CACHE_KEY, fetchAdminData, {
-          ttlMs: ADMIN_CACHE_TTL_MS,
-          storageKey: ADMIN_CACHE_STORAGE_KEY
-        });
+        const fresh = await getOrFetchCached(ADMIN_CACHE_KEY, fetchAdminData, CACHE_OPTS);
         setAdminData(fresh);
 
-        // Одноразовая миграция локальных данных (если есть)
+        // One-time migration of legacy localStorage data
         const savedRaw = localStorage.getItem(ADMIN_STORAGE_KEY);
         if (savedRaw) {
           try {
             const saved = JSON.parse(savedRaw) as AdminData;
-            if (saved.tactics?.length) {
+            if (saved.tactics?.length && accessToken) {
               for (const item of saved.tactics) {
                 const exists = fresh.tactics.some(x => x.title === item.title && x.description === item.description);
-                if (!exists && accessToken) {
+                if (!exists) {
                   try { await tacticsCreate({ ...item, id: undefined as any }, accessToken); } catch {}
                 }
               }
             }
-            if (saved.quizzes?.length) {
+            if (saved.quizzes?.length && accessToken) {
               for (const item of saved.quizzes) {
                 const exists = fresh.quizzes.some(x => x.title === item.title && x.question === item.question);
-                if (!exists && accessToken) {
+                if (!exists) {
                   try { await quizzesCreate({ ...item, id: undefined as any }, accessToken); } catch {}
                 }
               }
             }
-            // После миграции очищаем
             localStorage.removeItem(ADMIN_STORAGE_KEY);
-            // После возможной миграции — принудительно обновим кэш, чтобы UI не требовал рефреша.
             try {
               const updated = await fetchAdminData();
-              writeCachedValue(ADMIN_CACHE_KEY, updated, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
+              updateCache(updated);
               setAdminData(updated);
             } catch {}
           } catch {}
@@ -92,113 +77,70 @@ export const useAdminData = () => {
         setIsLoading(false);
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const mutate = (updater: (prev: AdminData) => AdminData) => {
+    setAdminData(prev => {
+      const next = updater(prev);
+      updateCache(next);
+      return next;
+    });
+  };
 
   const addTactic = async (tactic: Omit<Tactic, 'id'>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const created = useSupabase ? await createTacticInSupabase(tactic) : await tacticsCreate(tactic, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, tactics: [created, ...prev.tactics] };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    const created = USE_SUPABASE ? await createTacticInSupabase(tactic) : await tacticsCreate(tactic, accessToken);
+    mutate(prev => ({ ...prev, tactics: [created, ...prev.tactics] }));
   };
 
   const updateTactic = async (id: string, updates: Partial<Tactic>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const updated = useSupabase ? await updateTacticInSupabase(id, updates) : await tacticsUpdate(id, updates, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, tactics: prev.tactics.map(t => t.id === id ? updated : t) };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    const updated = USE_SUPABASE ? await updateTacticInSupabase(id, updates) : await tacticsUpdate(id, updates, accessToken);
+    mutate(prev => ({ ...prev, tactics: prev.tactics.map(t => t.id === id ? updated : t) }));
   };
 
   const deleteTactic = async (id: string) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    if (useSupabase) await deleteTacticInSupabase(id); else await tacticsDelete(id, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, tactics: prev.tactics.filter(t => t.id !== id) };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    if (USE_SUPABASE) await deleteTacticInSupabase(id); else await tacticsDelete(id, accessToken);
+    mutate(prev => ({ ...prev, tactics: prev.tactics.filter(t => t.id !== id) }));
   };
 
   const addQuiz = async (quiz: Omit<QuizQuestion, 'id'>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const created = useSupabase ? await createQuizInSupabase(quiz) : await quizzesCreate(quiz, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, quizzes: [created, ...prev.quizzes] };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    const created = USE_SUPABASE ? await createQuizInSupabase(quiz) : await quizzesCreate(quiz, accessToken);
+    mutate(prev => ({ ...prev, quizzes: [created, ...prev.quizzes] }));
   };
 
   const updateQuiz = async (id: string, updates: Partial<QuizQuestion>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const updated = useSupabase ? await updateQuizInSupabase(id, updates) : await quizzesUpdate(id, updates, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, quizzes: prev.quizzes.map(q => q.id === id ? updated : q) };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    const updated = USE_SUPABASE ? await updateQuizInSupabase(id, updates) : await quizzesUpdate(id, updates, accessToken);
+    mutate(prev => ({ ...prev, quizzes: prev.quizzes.map(q => q.id === id ? updated : q) }));
   };
 
   const deleteQuiz = async (id: string) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    if (useSupabase) await deleteQuizInSupabase(id); else await quizzesDelete(id, accessToken);
-    setAdminData(prev => {
-      const next = { ...prev, quizzes: prev.quizzes.filter(q => q.id !== id) };
-      writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-      return next;
-    });
+    if (USE_SUPABASE) await deleteQuizInSupabase(id); else await quizzesDelete(id, accessToken);
+    mutate(prev => ({ ...prev, quizzes: prev.quizzes.filter(q => q.id !== id) }));
   };
 
-  const addPlaylist = (playlist: Omit<Playlist, 'id'>) => {
+  const addPlaylist = async (playlist: Omit<Playlist, 'id'>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const promise = useSupabase ? createPlaylistInSupabase(playlist) : playlistsCreate(playlist, accessToken);
-    return promise.then((created) => {
-      setAdminData(prev => {
-        const next = { ...prev, playlists: [created, ...prev.playlists] };
-        writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-        return next;
-      });
-    });
+    const created = USE_SUPABASE ? await createPlaylistInSupabase(playlist) : await playlistsCreate(playlist, accessToken);
+    mutate(prev => ({ ...prev, playlists: [created, ...prev.playlists] }));
   };
 
-  const updatePlaylist = (id: string, updates: Partial<Playlist>) => {
+  const updatePlaylist = async (id: string, updates: Partial<Playlist>) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const promise = useSupabase ? updatePlaylistInSupabase(id, updates) : playlistsUpdate(id, updates, accessToken);
-    return promise.then(updated => {
-      setAdminData(prev => {
-        const next = { ...prev, playlists: prev.playlists.map(p => p.id === id ? updated : p) };
-        writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-        return next;
-      });
-    });
+    const updated = USE_SUPABASE ? await updatePlaylistInSupabase(id, updates) : await playlistsUpdate(id, updates, accessToken);
+    mutate(prev => ({ ...prev, playlists: prev.playlists.map(p => p.id === id ? updated : p) }));
   };
 
-  const deletePlaylist = (id: string) => {
+  const deletePlaylist = async (id: string) => {
     if (!accessToken) throw new Error('Требуется авторизация');
-    const useSupabase = isSupabaseEnabled();
-    const promise = useSupabase ? deletePlaylistInSupabase(id) : playlistsDelete(id, accessToken);
-    return promise.then(() => {
-      setAdminData(prev => {
-        const next = { ...prev, playlists: prev.playlists.filter(p => p.id !== id) };
-        writeCachedValue(ADMIN_CACHE_KEY, next, { ttlMs: ADMIN_CACHE_TTL_MS, storageKey: ADMIN_CACHE_STORAGE_KEY });
-        return next;
-      });
-    });
+    if (USE_SUPABASE) await deletePlaylistInSupabase(id); else await playlistsDelete(id, accessToken);
+    mutate(prev => ({ ...prev, playlists: prev.playlists.filter(p => p.id !== id) }));
   };
-
 
   return {
     tactics: adminData.tactics,
@@ -214,6 +156,6 @@ export const useAdminData = () => {
     deleteQuiz,
     addPlaylist,
     updatePlaylist,
-    deletePlaylist
+    deletePlaylist,
   };
 };
