@@ -6,6 +6,7 @@ import { Landing } from './components/Landing';
 import { Support } from './components/Support';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { AppBackground } from './components/ui/Backgrounds';
+import { LocalizationProvider } from './hooks/useLocalization';
 import './index.css';
 
 function PageShell({ children }: { children: React.ReactNode }) {
@@ -30,11 +31,13 @@ const router = createBrowserRouter([
   { path: '/', element: <LandingRoute /> },
   { path: '/support', element: <PageShell><Support /></PageShell> },
   { path: '/privacy', element: <PageShell><PrivacyPolicy /></PageShell> },
-  { path: '/app/*', element: <App /> }
+  { path: '/app/*', element: <App /> },
 ]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <LocalizationProvider>
+      <RouterProvider router={router} />
+    </LocalizationProvider>
   </StrictMode>
 );

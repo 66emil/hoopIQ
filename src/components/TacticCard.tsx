@@ -4,6 +4,7 @@ import { CheckCircle, X, ArrowLeft, ArrowRight, Clock, Sparkles, Zap, Target, Aw
 import { Tactic } from '../types';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../hooks/useAuth';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface TacticCardProps {
   tactic: Tactic;
@@ -13,10 +14,12 @@ interface TacticCardProps {
 
 const DiffPill = ({ d }: { d: string }) => {
   const map = { beginner: 'beg', intermediate: 'med', advanced: 'adv' } as const;
-  return <span className={`chip ${map[d as keyof typeof map] ?? ''}`}>
-    <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor', opacity: .85 }} />
-    {d[0].toUpperCase() + d.slice(1)}
-  </span>;
+  return (
+    <span className={`chip ${map[d as keyof typeof map] ?? ''}`}>
+      <span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor', opacity: 0.85 }} />
+      {d[0].toUpperCase() + d.slice(1)}
+    </span>
+  );
 };
 
 const CatPill = ({ c }: { c: string }) => (
@@ -25,27 +28,45 @@ const CatPill = ({ c }: { c: string }) => (
   </span>
 );
 
+const HalfCourt = () => (
+  <svg
+    width="100%" height="100%" viewBox="0 0 1200 600"
+    preserveAspectRatio="xMidYMid slice"
+    style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+  >
+    <g stroke="var(--line-2)" fill="none" strokeWidth="1.25" opacity={0.55}>
+      <rect x="40" y="40" width="1120" height="520" rx="2" />
+      <line x1="600" y1="40" x2="600" y2="560" />
+      <circle cx="600" cy="300" r="70" />
+      <rect x="40" y="200" width="190" height="200" />
+      <circle cx="230" cy="300" r="50" />
+      <rect x="970" y="200" width="190" height="200" />
+      <circle cx="970" cy="300" r="50" />
+      <path d="M40 90 Q 360 300 40 510" />
+      <path d="M1160 90 Q 840 300 1160 510" />
+    </g>
+  </svg>
+);
+
 export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onComplete }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [pendingOpen, setPendingOpen] = useState(false);
   const { currentUser, accessToken, isAuthLoading } = useAuth();
+  const { t } = useLocalization();
   const navigate = useNavigate();
 
+  const isOff = tactic.category === 'offense';
+  const stepsCount = tactic.steps?.length ?? 0;
+
   const handleFinish = () => {
-    try {
-      if (!isCompleted) onComplete();
-    } finally {
-      setShowModal(false);
-      navigate('/app/tactics', { replace: true });
-    }
+    try { if (!isCompleted) onComplete(); }
+    finally { setShowModal(false); navigate('/app/tactics', { replace: true }); }
   };
 
   const handleShowDetails = () => {
-    if (currentUser || accessToken) {
-      setShowModal(true); setActiveStep(0); return;
-    }
+    if (currentUser || accessToken) { setShowModal(true); setActiveStep(0); return; }
     if (isAuthLoading) { setPendingOpen(true); return; }
     setShowAuthModal(true);
   };
@@ -57,42 +78,98 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
     setPendingOpen(false);
   }, [pendingOpen, isAuthLoading, currentUser, accessToken]);
 
+  const coverBg = isOff
+    ? 'linear-gradient(135deg, color-mix(in oklab, var(--accent-tint) 80%, var(--bg-soft)) 0%, color-mix(in oklab, var(--accent-soft) 50%, var(--bg-elev)) 100%)'
+    : 'linear-gradient(135deg, color-mix(in oklab, var(--slate-soft) 75%, var(--bg-soft)) 0%, color-mix(in oklab, var(--slate-soft) 50%, var(--bg-elev)) 100%)';
+
+  const spotlight = isOff
+    ? 'radial-gradient(circle at 50% 55%, color-mix(in oklab, var(--accent-glow) 30%, transparent) 0%, transparent 60%)'
+    : 'radial-gradient(circle at 50% 55%, color-mix(in oklab, var(--slate) 25%, transparent) 0%, transparent 60%)';
+
+  const tileBg = isOff
+    ? 'linear-gradient(160deg, var(--accent-glow), var(--accent) 55%, var(--accent-deep))'
+    : 'linear-gradient(160deg, color-mix(in oklab, var(--slate) 70%, white), var(--slate), color-mix(in oklab, var(--slate) 80%, black))';
+
+  const tileShadow = `0 18px 36px color-mix(in oklab, ${isOff ? 'var(--accent)' : 'var(--slate)'} 45%, transparent), inset 0 1px 0 rgba(255,255,255,.35)`;
+
   return (
     <>
       <article className="card" style={{ padding: 0 }}>
-        <div className="flex items-start justify-between gap-3 px-6 pt-6">
-          <span className="icon-soft lg">
-            {tactic.category === 'offense' ? <Zap size={26} /> : <Target size={26} />}
-          </span>
-          <div className="flex items-center gap-2">
-            <DiffPill d={tactic.difficulty} />
-            <CatPill c={tactic.category} />
+        {/* Cover */}
+        <div
+          style={{
+            position: 'relative', aspectRatio: '16 / 9',
+            background: coverBg, overflow: 'hidden',
+            borderTopLeftRadius: 'var(--r-lg)', borderTopRightRadius: 'var(--r-lg)',
+          }}
+        >
+          {tactic.thumbnail ? (
+            <img src={tactic.thumbnail} alt={tactic.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <>
+              <HalfCourt />
+              <div style={{ position: 'absolute', inset: 0, background: spotlight }} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  style={{
+                    position: 'relative', width: 88, height: 88, borderRadius: 24,
+                    background: tileBg, color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: tileShadow,
+                  }}
+                >
+                  {isOff ? <Zap size={44} /> : <Target size={44} />}
+                  <span
+                    style={{
+                      position: 'absolute', inset: -6, borderRadius: 30,
+                      border: '1px dashed color-mix(in oklab, currentColor 30%, transparent)',
+                      color: isOff ? 'var(--accent)' : 'var(--slate)',
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div style={{ position: 'absolute', left: 14, top: 14 }}><DiffPill d={tactic.difficulty} /></div>
+          <div style={{ position: 'absolute', right: 14, top: 14 }}><CatPill c={tactic.category} /></div>
+          <div style={{ position: 'absolute', left: 14, bottom: 14 }}>
+            <span className="chip" style={{ background: 'var(--bg-card)' }}>
+              <Sparkles size={11} /> {stepsCount} {t('common.steps')}
+            </span>
           </div>
+          {isCompleted && (
+            <div style={{ position: 'absolute', right: 14, bottom: 14 }}>
+              <span
+                className="inline-flex items-center gap-1.5 text-[12px] font-semibold"
+                style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: 999, boxShadow: '0 0 0 1px var(--line) inset', color: 'var(--sage)' }}
+              >
+                <CheckCircle size={14} /> Done
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="px-6 pt-3 pb-6">
-          <div className="flex items-start justify-between gap-3 mt-3">
-            <h3 className="font-display text-xl leading-tight">{tactic.title}</h3>
-            {isCompleted && (
-              <span className="inline-flex items-center gap-1 text-[12px] font-semibold" style={{ color: 'var(--sage)' }}>
-                <CheckCircle size={16} /> Done
-              </span>
-            )}
-          </div>
-          <p className="muted-2 mt-2 text-sm leading-relaxed">{tactic.description}</p>
-
-          <div className="flex items-center gap-4 mt-5 text-[12px] font-semibold muted">
-            <span className="inline-flex items-center gap-1.5"><Clock size={14} /> {tactic.steps.length} steps</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles size={14} /> Step-by-step</span>
-            <span className="flex-1" />
-            <button onClick={handleShowDetails} disabled={isAuthLoading} className="btn btn-ghost btn-sm">
-              Open <ArrowRight size={14} className="arrow" />
+        {/* Body */}
+        <div style={{ padding: '18px 22px 22px' }}>
+          <h3 className="text-display" style={{ fontSize: 20, lineHeight: 1.2 }}>{tactic.title}</h3>
+          <p className="muted-2" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.55 }}>{tactic.description}</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
+            <span className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600 }}>
+              <Clock size={14} /> {stepsCount} {t('common.steps')}
+            </span>
+            <button className="btn btn-primary btn-sm" onClick={handleShowDetails} disabled={isAuthLoading}>
+              {t('common.open')} <ArrowRight size={14} className="arrow" />
             </button>
           </div>
         </div>
       </article>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => { setShowAuthModal(false); setShowModal(true); setActiveStep(0); }} />
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => { setShowAuthModal(false); setShowModal(true); setActiveStep(0); }}
+      />
 
       {showModal && (
         <div className="fixed inset-0 z-50 pt-safe pb-safe">
@@ -103,28 +180,25 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
           />
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div
-              className="modal-viewport w-full max-w-6xl flex flex-col overflow-hidden"
-              style={{
-                background: 'var(--bg-card)',
-                borderRadius: 32,
-                boxShadow: 'var(--shadow-3), 0 0 0 1px var(--line)',
-                maxHeight: '90vh',
-              }}
+              className="modal-viewport flex w-full max-w-6xl flex-col overflow-hidden"
+              style={{ background: 'var(--bg-card)', borderRadius: 32, boxShadow: 'var(--shadow-3), 0 0 0 1px var(--line)', maxHeight: '90vh' }}
             >
-              <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid var(--line)' }}>
+              <div className="flex items-center gap-3" style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
                 <span className="icon-soft" style={{ width: 38, height: 38 }}>
-                  {tactic.category === 'offense' ? <Zap size={18} /> : <Target size={18} />}
+                  {isOff ? <Zap size={18} /> : <Target size={18} />}
                 </span>
-                <div className="leading-tight">
-                  <div className="muted text-[11px] uppercase tracking-widest">{tactic.category} · {tactic.difficulty}</div>
-                  <h3 className="font-display text-xl">{tactic.title}</h3>
+                <div style={{ lineHeight: 1.2 }}>
+                  <div className="muted" style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                    {tactic.category} · {tactic.difficulty}
+                  </div>
+                  <h3 className="text-display" style={{ fontSize: 20 }}>{tactic.title}</h3>
                 </div>
-                <span className="flex-1" />
+                <span style={{ flex: 1 }} />
                 <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}><X size={16} /></button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0">
-                <div className="relative modal-scroll md:overflow-hidden" style={{ background: 'var(--bg-soft)' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 min-h-0 flex-1">
+                <div className="relative md:h-[560px] aspect-16-9 md:aspect-auto" style={{ background: 'var(--bg-soft)' }}>
                   {tactic.stepImages?.[activeStep]?.trim() ? (
                     <img src={tactic.stepImages[activeStep]} alt={`step-${activeStep + 1}`} className="w-full h-full object-contain" />
                   ) : tactic.thumbnail ? (
@@ -133,27 +207,27 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
                     <div className="w-full h-full flex items-center justify-center muted">No image</div>
                   )}
                 </div>
-                <div className="p-6 md:overflow-y-auto modal-scroll">
+                <div className="modal-scroll p-6 md:h-[560px] overflow-y-auto">
                   <div key={activeStep} className="animate-fade-in-scale">
                     <div className="font-display text-2xl leading-snug mb-3">Step {activeStep + 1}</div>
-                    <p className="muted-2 text-base leading-relaxed whitespace-pre-line">
+                    <p className="muted-2" style={{ fontSize: 16, lineHeight: 1.65, whiteSpace: 'pre-line' }}>
                       {tactic.steps?.[activeStep] || ''}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-3 px-6 py-4" style={{ borderTop: '1px solid var(--line)' }}>
+              <div className="flex items-center justify-between gap-3" style={{ padding: '16px 24px', borderTop: '1px solid var(--line)' }}>
                 <button className="btn btn-secondary btn-sm" disabled={activeStep === 0} onClick={() => setActiveStep(s => Math.max(0, s - 1))}>
                   <ArrowLeft size={14} /> Prev
                 </button>
-                <span className="muted text-[13px] font-semibold tabular">{activeStep + 1} / {tactic.steps.length}</span>
-                {activeStep === tactic.steps.length - 1 ? (
+                <span className="muted tabular" style={{ fontSize: 13, fontWeight: 600 }}>{activeStep + 1} / {stepsCount}</span>
+                {activeStep === stepsCount - 1 ? (
                   <button className="btn btn-primary btn-sm" onClick={handleFinish} disabled={isCompleted}>
                     <Award size={16} /> {isCompleted ? 'Completed' : 'Mark complete · +10'}
                   </button>
                 ) : (
-                  <button className="btn btn-secondary btn-sm" onClick={() => setActiveStep(s => Math.min(tactic.steps.length - 1, s + 1))}>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setActiveStep(s => Math.min(stepsCount - 1, s + 1))}>
                     Next <ArrowRight size={14} className="arrow" />
                   </button>
                 )}
