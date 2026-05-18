@@ -183,16 +183,19 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
       />
 
       {showModal && (
-        <div className="fixed inset-0 z-50 pt-safe pb-safe">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ padding: 'max(env(safe-area-inset-top, 16px), 16px) 16px max(env(safe-area-inset-bottom, 16px), 16px)' }}
+        >
           <div
             className="absolute inset-0"
             onClick={() => setShowModal(false)}
             style={{ background: 'color-mix(in oklab, var(--ink) 30%, transparent)', backdropFilter: 'blur(8px) saturate(120%)' }}
           />
-          <div className="absolute inset-0 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-6xl pointer-events-none flex items-center justify-center">
             <div
-              className="modal-viewport flex w-full max-w-6xl flex-col overflow-hidden"
-              style={{ background: 'var(--bg-card)', borderRadius: 32, boxShadow: 'var(--shadow-3), 0 0 0 1px var(--line)', maxHeight: '90vh' }}
+              className="modal-viewport flex w-full flex-col overflow-hidden pointer-events-auto"
+              style={{ background: 'var(--bg-card)', borderRadius: 32, boxShadow: 'var(--shadow-3), 0 0 0 1px var(--line)', maxHeight: '90dvh' }}
             >
               <div className="flex items-center gap-3" style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)' }}>
                 <span className="icon-soft" style={{ width: 38, height: 38 }}>

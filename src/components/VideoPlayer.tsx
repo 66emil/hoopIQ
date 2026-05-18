@@ -51,7 +51,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         id = url.searchParams.get('v') || '';
       }
       if (!id) return '';
-      const params = new URLSearchParams({ rel: '0' });
+      const params = new URLSearchParams({ rel: '0', modestbranding: '1', iv_load_policy: '3' });
       return `https://www.youtube.com/embed/${id}?${params.toString()}`;
     } catch {
       return '';
@@ -151,13 +151,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>
       {sourceKind === 'youtube' ? (
-        <iframe
-          src={youTubeEmbedUrl || undefined}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+        <div className="relative w-full h-full">
+          <iframe
+            src={youTubeEmbedUrl || undefined}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          {/* Transparent overlay — blocks YouTube branding clicks without disrupting playback area */}
+          <div className="absolute inset-0" style={{ zIndex: 1, pointerEvents: 'none' }} />
+        </div>
       ) : sourceKind === 'vimeo' ? (
         <iframe
           src={vimeoEmbedUrl || undefined}
