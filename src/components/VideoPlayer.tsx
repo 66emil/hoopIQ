@@ -19,15 +19,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   hideOverlayControls = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
-
-  // Tracks whether the YT iframe has been started (hides the play overlay after first click)
-  const [ytStarted, setYtStarted] = useState(false);
 
   const sourceKind = useMemo(() => {
     const url = src || '';
@@ -39,38 +35,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return 'unknown';
   }, [src]);
 
-  // Reset ytStarted when video src changes (e.g. quiz switches to explanation video)
-  useEffect(() => {
-    setYtStarted(false);
-  }, [src]);
-
-  const youTubeVideoId = useMemo(() => {
+  const youTubeEmbedUrl = useMemo(() => {
     if (sourceKind !== 'youtube') return '';
     try {
       const url = new URL(src);
-      if (url.hostname.includes('youtu.be')) return url.pathname.split('/').filter(Boolean)[0] || '';
-      if (url.pathname.startsWith('/shorts/')) return url.pathname.split('/')[2] || '';
-      if (url.pathname.startsWith('/embed/')) return url.pathname.split('/')[2] || '';
-      return url.searchParams.get('v') || '';
+      let id = '';
+      if (url.hostname.includes('youtu.be')) id = url.pathname.split('/').filter(Boolean)[0] || '';
+      else if (url.pathname.startsWith('/shorts/')) id = url.pathname.split('/')[2] || '';
+      else if (url.pathname.startsWith('/embed/')) id = url.pathname.split('/')[2] || '';
+      else id = url.searchParams.get('v') || '';
+      if (!id) return '';
+      const params = new URLSearchParams({ rel: '0', modestbranding: '1', iv_load_policy: '3' });
+      return `https://www.youtube.com/embed/${id}?${params.toString()}`;
     } catch {
       return '';
     }
   }, [sourceKind, src]);
-
-  const youTubeEmbedUrl = useMemo(() => {
-    if (!youTubeVideoId) return '';
-    const params = new URLSearchParams({
-      rel: '0',
-      modestbranding: '1',
-      iv_load_policy: '3',
-      controls: '0',       // hide native YT controls
-      autoplay: '1',       // autoplay on load
-      loop: '1',           // loop the video
-      playlist: youTubeVideoId, // required for loop to work in iframe
-      enablejsapi: '1',    // allows postMessage control (fallback if autoplay blocked)
-    });
-    return `https://www.youtube.com/embed/${youTubeVideoId}?${params.toString()}`;
-  }, [youTubeVideoId]);
 
   const vimeoEmbedUrl = useMemo(() => {
     if (sourceKind !== 'vimeo') return '';
@@ -145,52 +125,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Sends playVideo command via postMessage — works without loading the YT IFrame API script
-  const playYouTube = () => {
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
-      '*',
-    );
-    setYtStarted(true);
-  };
-
   return (
     <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>
       {sourceKind === 'youtube' ? (
-        <div className="relative w-full h-full">
-          <iframe
-            ref={iframeRef}
-            src={youTubeEmbedUrl || undefined}
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-          {/* Fallback play button — shown if browser blocked autoplay.
-              Becomes pointer-events:none after first play so user can't accidentally
-              interact with the blocked iframe (controls=0 anyway). */}
-          {!ytStarted ? (
-            <div
-              className="absolute inset-0 flex items-center justify-center cursor-pointer"
-              style={{ zIndex: 2, background: 'rgba(0,0,0,0.35)' }}
-              onClick={playYouTube}
-            >
-              <div
-                style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  background: 'var(--accent)', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                }}
-              >
-                <Play size={28} color="#fff" style={{ marginLeft: 4 }} />
-              </div>
-            </div>
-          ) : (
-            /* Transparent blocker — prevents YouTube logo / title clicks after video starts */
-            <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: 'none' }} />
-          )}
-        </div>
+        <iframe
+          src={youTubeEmbedUrl || undefined}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
       ) : sourceKind === 'vimeo' ? (
         <iframe
           src={vimeoEmbedUrl || undefined}
@@ -211,7 +155,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       )}
 
-      {!hideOverlayControls && sourceKind !== 'youtube' && (
+      {!hideOverlayControls && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
           <div className="flex items-center space-x-3">
             <button onClick={togglePlay} className="text-white hover:text-orange-400 transition-colors">
