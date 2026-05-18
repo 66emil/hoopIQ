@@ -5,7 +5,7 @@ interface VideoPlayerProps {
   src: string;
   onTimeUpdate?: (currentTime: number) => void;
   onEnded?: () => void;
-  stopAt?: number; // время в секундах, когда нужно остановить видео
+  stopAt?: number;
   className?: string;
   hideOverlayControls?: boolean;
 }
@@ -16,14 +16,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onEnded,
   stopAt,
   className = '',
-  hideOverlayControls = false
+  hideOverlayControls = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Tracks whether the YT iframe has been started (hides the play overlay after first click)
+  const [ytStarted, setYtStarted] = useState(false);
 
   const sourceKind = useMemo(() => {
     const url = src || '';
@@ -35,36 +39,45 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return 'unknown';
   }, [src]);
 
-  const youTubeEmbedUrl = useMemo(() => {
+  // Reset ytStarted when video src changes (e.g. quiz switches to explanation video)
+  useEffect(() => {
+    setYtStarted(false);
+  }, [src]);
+
+  const youTubeVideoId = useMemo(() => {
     if (sourceKind !== 'youtube') return '';
     try {
       const url = new URL(src);
-      // watch?v=, share youtu.be, shorts, embed already
-      let id = '';
-      if (url.hostname.includes('youtu.be')) {
-        id = url.pathname.split('/').filter(Boolean)[0] || '';
-      } else if (url.pathname.startsWith('/shorts/')) {
-        id = url.pathname.split('/')[2] || '';
-      } else if (url.pathname.startsWith('/embed/')) {
-        id = url.pathname.split('/')[2] || '';
-      } else {
-        id = url.searchParams.get('v') || '';
-      }
-      if (!id) return '';
-      const params = new URLSearchParams({ rel: '0', modestbranding: '1', iv_load_policy: '3' });
-      return `https://www.youtube.com/embed/${id}?${params.toString()}`;
+      if (url.hostname.includes('youtu.be')) return url.pathname.split('/').filter(Boolean)[0] || '';
+      if (url.pathname.startsWith('/shorts/')) return url.pathname.split('/')[2] || '';
+      if (url.pathname.startsWith('/embed/')) return url.pathname.split('/')[2] || '';
+      return url.searchParams.get('v') || '';
     } catch {
       return '';
     }
   }, [sourceKind, src]);
 
+  const youTubeEmbedUrl = useMemo(() => {
+    if (!youTubeVideoId) return '';
+    const params = new URLSearchParams({
+      rel: '0',
+      modestbranding: '1',
+      iv_load_policy: '3',
+      controls: '0',       // hide native YT controls
+      autoplay: '1',       // autoplay on load
+      loop: '1',           // loop the video
+      playlist: youTubeVideoId, // required for loop to work in iframe
+      enablejsapi: '1',    // allows postMessage control (fallback if autoplay blocked)
+    });
+    return `https://www.youtube.com/embed/${youTubeVideoId}?${params.toString()}`;
+  }, [youTubeVideoId]);
+
   const vimeoEmbedUrl = useMemo(() => {
     if (sourceKind !== 'vimeo') return '';
     try {
       const url = new URL(src);
-      // vimeo.com/{id} or player.vimeo.com/video/{id}
-      let id = '';
       const parts = url.pathname.split('/').filter(Boolean);
+      let id = '';
       if (url.hostname === 'vimeo.com' && parts[0]) id = parts[0];
       if (url.hostname === 'player.vimeo.com' && parts[1]) id = parts[1];
       if (!id) return '';
@@ -82,27 +95,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const time = video.currentTime;
       setCurrentTime(time);
       onTimeUpdate?.(time);
-
-      // Остановить видео в указанное время
       if (stopAt && time >= stopAt) {
         video.pause();
         setIsPlaying(false);
       }
     };
-
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration);
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-      onEnded?.();
-    };
+    const handleLoadedMetadata = () => setDuration(video.duration);
+    const handleEnded = () => { setIsPlaying(false); onEnded?.(); };
+    const handleError = () => setError('Failed to load video');
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('ended', handleEnded);
-    const handleError = () => setError('Failed to load video');
     video.addEventListener('error', handleError);
 
     return () => {
@@ -116,19 +120,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
-
-    if (isPlaying) {
-      video.pause();
-    } else {
-      video.play();
-    }
+    if (isPlaying) { video.pause(); } else { video.play(); }
     setIsPlaying(!isPlaying);
   };
 
   const toggleMute = () => {
     const video = videoRef.current;
     if (!video) return;
-
     video.muted = !video.muted;
     setIsMuted(!isMuted);
   };
@@ -136,7 +134,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const video = videoRef.current;
     if (!video) return;
-
     const time = parseFloat(e.target.value);
     video.currentTime = time;
     setCurrentTime(time);
@@ -148,19 +145,51 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Sends playVideo command via postMessage — works without loading the YT IFrame API script
+  const playYouTube = () => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+      '*',
+    );
+    setYtStarted(true);
+  };
+
   return (
     <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>
       {sourceKind === 'youtube' ? (
         <div className="relative w-full h-full">
           <iframe
+            ref={iframeRef}
             src={youTubeEmbedUrl || undefined}
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
           />
-          {/* Transparent overlay — blocks YouTube branding clicks without disrupting playback area */}
-          <div className="absolute inset-0" style={{ zIndex: 1, pointerEvents: 'none' }} />
+          {/* Fallback play button — shown if browser blocked autoplay.
+              Becomes pointer-events:none after first play so user can't accidentally
+              interact with the blocked iframe (controls=0 anyway). */}
+          {!ytStarted ? (
+            <div
+              className="absolute inset-0 flex items-center justify-center cursor-pointer"
+              style={{ zIndex: 2, background: 'rgba(0,0,0,0.35)' }}
+              onClick={playYouTube}
+            >
+              <div
+                style={{
+                  width: 64, height: 64, borderRadius: '50%',
+                  background: 'var(--accent)', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                }}
+              >
+                <Play size={28} color="#fff" style={{ marginLeft: 4 }} />
+              </div>
+            </div>
+          ) : (
+            /* Transparent blocker — prevents YouTube logo / title clicks after video starts */
+            <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: 'none' }} />
+          )}
         </div>
       ) : sourceKind === 'vimeo' ? (
         <iframe
@@ -181,47 +210,37 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           preload="metadata"
         />
       )}
-      
-      {!hideOverlayControls && (
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={togglePlay}
-            className="text-white hover:text-orange-400 transition-colors"
-          >
-            <Play className="h-6 w-6" />
-          </button>
-          
-          {sourceKind === 'html5' || sourceKind === 'hls' ? (
-            <div className="flex-1">
-              <input
-                type="range"
-                min="0"
-                max={duration || 0}
-                value={currentTime}
-                onChange={handleSeek}
-                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-              />
-            </div>
-          ) : (
-            <div className="flex-1" />
-          )}
-          
-          {(sourceKind === 'html5' || sourceKind === 'hls') && (
-            <span className="text-white text-sm">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          )}
-          
-          <button
-            onClick={toggleMute}
-            className="text-white hover:text-orange-400 transition-colors"
-          >
-            <span className="inline-block h-5 w-5" />
-          </button>
+
+      {!hideOverlayControls && sourceKind !== 'youtube' && (
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+          <div className="flex items-center space-x-3">
+            <button onClick={togglePlay} className="text-white hover:text-orange-400 transition-colors">
+              <Play className="h-6 w-6" />
+            </button>
+
+            {(sourceKind === 'html5' || sourceKind === 'hls') ? (
+              <div className="flex-1">
+                <input
+                  type="range" min="0" max={duration || 0} value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+            ) : (
+              <div className="flex-1" />
+            )}
+
+            {(sourceKind === 'html5' || sourceKind === 'hls') && (
+              <span className="text-white text-sm">{formatTime(currentTime)} / {formatTime(duration)}</span>
+            )}
+
+            <button onClick={toggleMute} className="text-white hover:text-orange-400 transition-colors">
+              <span className="inline-block h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
       )}
+
       {error && (
         <div className="absolute top-2 left-2 right-2 text-sm text-red-400 bg-red-900/40 border border-red-700 rounded p-2">
           {error}
