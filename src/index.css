@@ -318,6 +318,10 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Hide header when any modal/quiz is open */
+body.modal-open header { display: none; }
+body.modal-open { overflow: hidden; }
+
 /* ── Mobile / touch ──────────────────────────────────────── */
 * { -webkit-tap-highlight-color: transparent; }
 body { overflow-x: hidden; }

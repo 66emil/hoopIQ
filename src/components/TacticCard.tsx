@@ -85,6 +85,15 @@ export const TacticCard: React.FC<TacticCardProps> = ({ tactic, isCompleted, onC
   }, [pendingOpen, isAuthLoading, currentUser, accessToken]);
 
   useEffect(() => {
+    if (showModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [showModal]);
+
+  useEffect(() => {
     const src = tactic.stepImages?.[activeStep]?.trim() || tactic.thumbnail;
     if (src) setImgLoading(true);
   }, [activeStep]);

@@ -1,4 +1,4 @@
-import { useState, FC } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { Play, CheckCircle, XCircle, Award, X } from 'lucide-react';
 import { QuizQuestion } from '../types';
 import { VideoPlayer } from './VideoPlayer';
@@ -56,6 +56,15 @@ export const QuizCard: FC<QuizCardProps> = ({ quiz, isCompleted, onComplete }) =
       setShowQuiz(true);
     }
   };
+
+  useEffect(() => {
+    if (showQuiz) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [showQuiz]);
 
   const handleAuthSuccess = () => setShowQuiz(true);
 
