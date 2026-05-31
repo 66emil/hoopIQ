@@ -4,12 +4,22 @@ export type SupabaseSession = {
   access_token: string;
 };
 
-export async function supabaseRegister(name: string, email: string, password: string): Promise<{ accessToken: string }> {
+export type RegisterRole = 'coach' | 'player';
+
+export async function supabaseRegister(
+  name: string,
+  email: string,
+  password: string,
+  opts?: { role?: RegisterRole; emailRedirectTo?: string }
+): Promise<{ accessToken: string }> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { name } }
+    options: {
+      data: { name, ...(opts?.role ? { role: opts.role } : {}) },
+      ...(opts?.emailRedirectTo ? { emailRedirectTo: opts.emailRedirectTo } : {})
+    }
   });
   if (error) throw new Error(error.message);
   const session = data.session;

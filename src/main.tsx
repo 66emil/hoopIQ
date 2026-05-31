@@ -5,6 +5,9 @@ import { createBrowserRouter, RouterProvider, useNavigate } from 'react-router-d
 import { Landing } from './components/Landing';
 import { Support } from './components/Support';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { JoinPage } from './components/JoinPage';
+import { CoachHome } from './components/coach/CoachHome';
+import { PlayerHome } from './components/player/PlayerHome';
 import { AppBackground } from './components/ui/Backgrounds';
 import { LocalizationProvider } from './hooks/useLocalization';
 import './index.css';
@@ -31,6 +34,9 @@ const router = createBrowserRouter([
   { path: '/', element: <LandingRoute /> },
   { path: '/support', element: <PageShell><Support /></PageShell> },
   { path: '/privacy', element: <PageShell><PrivacyPolicy /></PageShell> },
+  { path: '/join/:inviteCode', element: <JoinPage /> },
+  { path: '/coach', element: <CoachHome /> },
+  { path: '/player', element: <PlayerHome /> },
   { path: '/app/*', element: <App /> },
 ]);
 

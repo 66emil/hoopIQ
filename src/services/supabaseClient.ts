@@ -20,8 +20,4 @@ export function getSupabaseClient(): SupabaseClient {
   return cachedClient;
 }
 
-export function isSupabaseEnabled(): boolean {
-  return String(import.meta.env.VITE_USE_SUPABASE).toLowerCase() === 'true';
-}
-
 

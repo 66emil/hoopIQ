@@ -11,6 +11,8 @@ export type ProfileData = {
   avatarScale?: number | null;
   level?: number | null;
   xp?: number | null;
+  role?: 'coach' | 'player' | null;
+  displayName?: string | null;
   updatedAt?: string | null;
 };
 
@@ -40,7 +42,7 @@ export async function getProfile(userId: string): Promise<ProfileData | null> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('id, nickname, avatar_url, bio, position, avatarCropX, avatarCropY, avatarScale, updated_at, level, xp')
+    .select('id, nickname, avatar_url, bio, position, avatarCropX, avatarCropY, avatarScale, updated_at, level, xp, role, display_name')
     .eq('id', userId)
     .maybeSingle();
   if (error) throw new Error(error.message || 'Failed to load profile');
@@ -57,6 +59,8 @@ export async function getProfile(userId: string): Promise<ProfileData | null> {
     avatarScale: (data as any).avatarScale ?? null,
     level: (data as any).level ?? null,
     xp: (data as any).xp ?? null,
+    role: (data as any).role ?? null,
+    displayName: (data as any).display_name ?? null,
     updatedAt: (data as any).updated_at ?? null
   } as ProfileData;
 }

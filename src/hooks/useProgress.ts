@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserProgress } from '../types';
 import { useAuth } from './useAuth';
-import { apiUpdateProgress } from '../services/api';
-import { isSupabaseEnabled } from '../services/supabaseClient';
 import { upsertProfileProgress, getProfile } from '../services/supabaseProfile';
 import { getLevelFromXP } from '../services/levels';
 
@@ -69,26 +67,22 @@ export const useProgress = () => {
       setProgress(EMPTY_PROGRESS);
     }
 
-    if (isSupabaseEnabled()) {
-      (async () => {
-        try {
-          const p = await getProfile(currentUser.id);
-          if (p && (p.level != null || p.xp != null)) {
-            setProgress(prev => {
-              const total = typeof p.xp === 'number' ? p.xp : prev.totalScore;
-              const lvl = typeof p.level === 'number' ? p.level : getLevelFromXP(total);
-              return { ...prev, totalScore: total, level: lvl };
-            });
-          }
-        } catch {
-          // silent — don't disrupt UX
-        } finally {
-          setIsProgressLoaded(true);
+    (async () => {
+      try {
+        const p = await getProfile(currentUser.id);
+        if (p && (p.level != null || p.xp != null)) {
+          setProgress(prev => {
+            const total = typeof p.xp === 'number' ? p.xp : prev.totalScore;
+            const lvl = typeof p.level === 'number' ? p.level : getLevelFromXP(total);
+            return { ...prev, totalScore: total, level: lvl };
+          });
         }
-      })();
-    } else {
-      setIsProgressLoaded(true);
-    }
+      } catch {
+        // silent — don't disrupt UX
+      } finally {
+        setIsProgressLoaded(true);
+      }
+    })();
   }, [currentUser]);
 
   // Persist to localStorage on every change
@@ -102,17 +96,8 @@ export const useProgress = () => {
     if (!currentUser || !isProgressLoaded) return;
     if (progress.totalScore === 0 && progress.level === 0) return;
 
-    if (isSupabaseEnabled()) {
-      upsertProfileProgress({ id: currentUser.id, level: progress.level, xp: progress.totalScore })
-        .catch(err => console.error('Ошибка синхронизации прогресса с Supabase:', err));
-      return;
-    }
-
-    if (!accessToken) return;
-    if (progress.level > 0 || progress.totalScore > 0) {
-      apiUpdateProgress(accessToken, progress.level, progress.totalScore)
-        .catch(err => console.error('Ошибка синхронизации прогресса с сервером:', err));
-    }
+    upsertProfileProgress({ id: currentUser.id, level: progress.level, xp: progress.totalScore })
+      .catch(err => console.error('Ошибка синхронизации прогресса с Supabase:', err));
   }, [progress.level, progress.totalScore, accessToken, currentUser, isProgressLoaded]);
 
   const applyAction = (prev: UserProgress, basePoints: number): UserProgress => {

@@ -7,27 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "server:dev": "node --import tsx server/index.ts",
-    "start": "node --import tsx server/index.ts",
-    "dev:gateway": "node --import tsx services/gateway/index.ts",
-    "dev:auth": "node --import tsx services/auth/index.ts",
-    "dev:users": "node --import tsx services/users/index.ts",
-    "dev:content": "node --import tsx services/content/index.ts",
-    "dev:playlists": "node --import tsx services/playlists/index.ts",
-    "dev:all": "concurrently -n gw,auth,users,content,pl -c blue,magenta,green,yellow,cyan \"npm:dev:gateway\" \"npm:dev:auth\" \"npm:dev:users\" \"npm:dev:content\" \"npm:dev:playlists\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
-    "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.4.1",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.4.0",
-    "http-proxy-middleware": "^3.0.0",
-    "apicache": "^1.6.3",
-    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.344.0",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",
@@ -37,10 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "@types/cookie-parser": "^1.4.7",
-    "@types/express": "^4.17.21",
     "@types/node": "^22.5.4",
-    "@types/jsonwebtoken": "^9.0.6",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -51,11 +31,8 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "ts-node-dev": "^2.0.0",
-    "tsx": "^4.18.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2",
-    "concurrently": "^9.1.0"
+    "vite": "^5.4.2"
   }
 }

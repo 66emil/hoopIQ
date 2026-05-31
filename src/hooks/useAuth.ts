@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User } from '../types';
-import { apiLogin, apiMe, apiRegister } from '../services/api';
-import { getSupabaseClient, isSupabaseEnabled } from '../services/supabaseClient';
-import { supabaseGetMe, supabaseLogin, supabaseRegister } from '../services/supabaseAuth';
+import { getSupabaseClient } from '../services/supabaseClient';
+import { supabaseGetMe, supabaseLogin, supabaseRegister, type RegisterRole } from '../services/supabaseAuth';
 
 const AUTH_SESSION_KEY = 'basketball-iq-session';
 
@@ -34,27 +33,8 @@ export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<PublicUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
-  // Local API mode
-  useEffect(() => {
-    if (isSupabaseEnabled()) return;
-    setIsAuthLoading(true);
-    (async () => {
-      if (!accessToken) { setCurrentUser(null); setIsAuthLoading(false); return; }
-      try {
-        const me = await apiMe(accessToken);
-        setCurrentUser(me as PublicUser);
-      } catch {
-        setCurrentUser(null);
-        setAccessToken(null);
-      } finally {
-        setIsAuthLoading(false);
-      }
-    })();
-  }, [accessToken]);
-
   // Supabase: restore session once and subscribe to changes
   useEffect(() => {
-    if (!isSupabaseEnabled()) return;
     const supabase = getSupabaseClient();
     let isMounted = true;
     setIsAuthLoading(true);
@@ -100,11 +80,14 @@ export const useAuth = () => {
     };
   }, []);
 
-  const register = async (email: string, password: string, name: string): Promise<{ ok: true } | { ok: false; error: string }> => {
+  const register = async (
+    email: string,
+    password: string,
+    name: string,
+    opts?: { role?: RegisterRole; emailRedirectTo?: string }
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
     try {
-      const { accessToken: token } = isSupabaseEnabled()
-        ? await supabaseRegister(name, email, password)
-        : await apiRegister(name, email, password);
+      const { accessToken: token } = await supabaseRegister(name, email, password, opts);
       setAccessToken(token);
       return { ok: true };
     } catch (e: any) {
@@ -114,9 +97,7 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string): Promise<{ ok: true } | { ok: false; error: string }> => {
     try {
-      const { accessToken: token } = isSupabaseEnabled()
-        ? await supabaseLogin(email, password)
-        : await apiLogin(email, password);
+      const { accessToken: token } = await supabaseLogin(email, password);
       setAccessToken(token);
       return { ok: true };
     } catch (e: any) {
@@ -125,9 +106,7 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    if (isSupabaseEnabled()) {
-      try { getSupabaseClient().auth.signOut(); } catch {}
-    }
+    try { getSupabaseClient().auth.signOut(); } catch {}
     setAccessToken(null);
     setCurrentUser(null);
   };

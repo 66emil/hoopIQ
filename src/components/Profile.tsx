@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { useAuth } from '../hooks/useAuth';
+import { useRole } from '../hooks/useRole';
 import { useLocalization } from '../hooks/useLocalization';
 import { getLevelInfo } from '../services/levels';
 import { UserProgress } from '../types';
 import { AuthForm } from './AuthForm';
-import { isSupabaseEnabled } from '../services/supabaseClient';
 import { getProfile, upsertProfile } from '../services/supabaseProfile';
 
 interface ProfileProps {
@@ -14,7 +15,19 @@ interface ProfileProps {
 
 export const Profile = ({ progress }: ProfileProps) => {
   const { currentUser, logout, updateProfile, login, register, isAuthLoading } = useAuth();
+  const { role, isRoleLoading } = useRole();
+  const navigate = useNavigate();
   const { t } = useLocalization();
+  const [justAuthed, setJustAuthed] = useState(false);
+
+  // After an explicit login/register, send coaches/players to their cabinet.
+  // Owners/admins (no role) stay on the profile.
+  useEffect(() => {
+    if (!justAuthed || isRoleLoading || !currentUser) return;
+    if (role === 'coach') { setJustAuthed(false); navigate('/coach'); }
+    else if (role === 'player') { setJustAuthed(false); navigate('/player'); }
+    else setJustAuthed(false);
+  }, [justAuthed, isRoleLoading, role, currentUser, navigate]);
   const [name, setName] = useState(currentUser?.name ?? '');
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [avatar, setAvatar] = useState<string | null>(() => localStorage.getItem('profile-avatar'));
@@ -81,7 +94,6 @@ export const Profile = ({ progress }: ProfileProps) => {
   useEffect(() => {
     const load = async () => {
       if (!currentUser) return;
-      if (!isSupabaseEnabled()) return;
 
       try {
         const cachedRaw = localStorage.getItem(getProfileCacheKey(currentUser.id));
@@ -129,7 +141,6 @@ export const Profile = ({ progress }: ProfileProps) => {
 
   const saveProfileToSupabase = async () => {
     if (!currentUser) return;
-    if (!isSupabaseEnabled()) return;
     try {
       await upsertProfile({
         id: currentUser.id,
@@ -175,10 +186,15 @@ export const Profile = ({ progress }: ProfileProps) => {
             mode={authMode}
             onLogin={async (email, password) => {
               const res = await login(email, password);
+              if (res.ok) setJustAuthed(true);
               return res.ok ? null : res.error;
             }}
             onRegister={async (name, email, password) => {
-              const res = await register(email, password, name);
+              const res = await register(email, password, name, {
+                role: 'coach',
+                emailRedirectTo: `${window.location.origin}/app/profile`,
+              });
+              if (res.ok) setJustAuthed(true);
               return res.ok ? null : res.error;
             }}
             onSwitchMode={(mode) => setAuthMode(mode)}
@@ -263,6 +279,17 @@ export const Profile = ({ progress }: ProfileProps) => {
               <option value="Center">{t('profile.position.c')}</option>
             </select>
           </div>
+
+          {(role === 'coach' || role === 'player') && (
+            <div className="pt-4">
+              <button
+                onClick={() => navigate(role === 'coach' ? '/coach' : '/player')}
+                className="btn btn-secondary w-full"
+              >
+                {role === 'coach' ? 'Кабинет тренера' : 'Назначено мне'}
+              </button>
+            </div>
+          )}
 
           <div className="pt-4">
             <button

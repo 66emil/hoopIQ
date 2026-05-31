@@ -1,5 +1,5 @@
 import { getSupabaseClient } from './supabaseClient';
-import type { QuizVideo } from './api';
+import type { QuizVideo } from '../types';
 
 // Expected table: videos (id uuid/text, title text, description text, category text, difficulty text,
 // videoUrl text, thumbnail text, explanationVideoUrl text, createdAt timestamptz)

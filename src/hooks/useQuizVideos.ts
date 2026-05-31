@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QuizVideo, videosList } from '../services/api';
-import { isSupabaseEnabled } from '../services/supabaseClient';
+import type { QuizVideo } from '../types';
 import { listVideosFromSupabase } from '../services/supabaseVideos';
 import { getOrFetchCached, readCachedValue, writeCachedValue } from '../services/resourceCache';
 
@@ -9,8 +8,7 @@ const VIDEOS_CACHE_STORAGE_KEY = 'basketball-iq-videos-cache-v1';
 const VIDEOS_CACHE_TTL_MS = 10 * 60 * 1000;
 
 async function fetchVideos(): Promise<QuizVideo[]> {
-  const useSupabase = isSupabaseEnabled();
-  return useSupabase ? await listVideosFromSupabase() : await videosList();
+  return listVideosFromSupabase();
 }
 
 export const useQuizVideos = () => {

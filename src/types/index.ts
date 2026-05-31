@@ -104,3 +104,37 @@ export interface User {
   passwordHash: string;
   createdAt: string;
 }
+
+export type UserRole = 'coach' | 'player';
+
+export interface Team {
+  id: string;
+  coachId: string;
+  name: string;
+  inviteCode: string;
+  createdAt: string;
+}
+
+export interface RosterPlayer {
+  playerId: string;
+  displayName: string | null;
+  joinedAt: string;
+}
+
+export interface LeaderboardEntry {
+  playerId: string;
+  displayName: string | null;
+  totalScore: number;
+}
+
+export interface QuizVideo {
+  id: string;
+  title: string;
+  description?: string | null;
+  category: 'offense' | 'defense';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  videoUrl: string;
+  thumbnail?: string | null;
+  explanationVideoUrl?: string | null;
+  createdAt: string;
+}

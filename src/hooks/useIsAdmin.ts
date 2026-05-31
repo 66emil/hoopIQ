@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { isSupabaseEnabled } from '../services/supabaseClient';
 import { useAuth } from './useAuth';
 import { isUserAdmin } from '../services/supabaseAdmins';
 
@@ -65,7 +64,6 @@ export function useIsAdmin() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isSupabaseEnabled()) { setIsAdmin(false); return; }
     if (isAuthLoading) return;
     if (!currentUser?.id) { setIsAdmin(false); return; }
 
