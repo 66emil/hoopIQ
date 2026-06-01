@@ -127,6 +127,45 @@ export interface LeaderboardEntry {
   totalScore: number;
 }
 
+export type MaterialType = 'quiz' | 'tactic';
+
+export interface MaterialRef {
+  type: MaterialType;
+  id: string;
+}
+
+export interface Assignment {
+  id: string;
+  coachId: string;
+  teamId: string;
+  title: string | null;
+  deadline: string | null;
+  createdAt: string;
+}
+
+export interface AssignmentInput {
+  coachId: string;
+  teamId: string;
+  title?: string | null;
+  deadline?: string | null;
+  materials: MaterialRef[];
+  targetPlayerIds: string[]; // empty = whole team
+}
+
+// Per-player completion of one assignment, composed for the coach status view.
+export interface AssignmentPlayerStatus {
+  playerId: string;
+  displayName: string | null;
+  doneCount: number;
+  totalCount: number;
+  perMaterial: Record<string, { done: boolean; score: number }>; // key = `${type}:${id}`
+}
+
+export interface AssignmentStatus {
+  materials: MaterialRef[];
+  players: AssignmentPlayerStatus[];
+}
+
 export interface QuizVideo {
   id: string;
   title: string;
